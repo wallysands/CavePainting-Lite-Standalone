@@ -184,7 +184,7 @@ namespace IVLab.MinVR3
                 int splineIndex;
                 Spline spline = FindClosestSpline(currCenters, out splineIndex, out float splineStart, out float splineEnd);
                 Debug.Log("INDEX CHECK " +splineIndex);
-                BeginMorph(spline, splineIndex, splineStart, splineEnd);
+                BeginMorph(spline, splineIndex, currCenters[0], currCenters[^1]);
             }
         }
 
@@ -298,18 +298,11 @@ namespace IVLab.MinVR3
             return bestSpline;
         }
 
-        bool IsPointBetween(Vector3 point, Vector3 start, Vector3 end)
-        {
-            return (point.x >= Mathf.Min(start.x, end.x) && point.x <= Mathf.Max(start.x, end.x)) &&
-                (point.y >= Mathf.Min(start.y, end.y) && point.y <= Mathf.Max(start.y, end.y)) &&
-                (point.z >= Mathf.Min(start.z, end.z) && point.z <= Mathf.Max(start.z, end.z));
-        }
-
-        public void BeginMorph(Spline spline, int splineIndex, float splineStart, float splineEnd)
+        public void BeginMorph(Spline spline, int splineIndex, Vector3 splineStart, Vector3 splineEnd)
         {
 
-            Vector3 splitStart = spline.EvaluatePosition(splineStart);
-            Vector3 splitEnd = spline.EvaluatePosition(splineEnd);
+            // Vector3 splitStart = spline.EvaluatePosition(splineStart);
+            // Vector3 splitEnd = spline.EvaluatePosition(splineEnd);
             int startIndex = -1;
             int endIndex = -1;
             float bestStartDist = float.MaxValue;
@@ -319,8 +312,8 @@ namespace IVLab.MinVR3
             for (int i = 0; i < spline.Knots.Count(); i++)
             {
                 var k = spline.Knots.ElementAt(i).Position;
-                var startDist = Vector3.Distance(k, splitStart);
-                var endDist = Vector3.Distance(k, splitEnd);
+                var startDist = Vector3.Distance(k, splineStart);
+                var endDist = Vector3.Distance(k, splineEnd);
 
                 // If the split position is between two control points, we split here
                 if (startDist < bestStartDist)
@@ -328,7 +321,7 @@ namespace IVLab.MinVR3
                     bestStartDist = startDist;
                     startIndex = i;
                 }
-                if (startDist < bestEndDist)
+                if (endDist < bestEndDist)
                 {
                     bestEndDist = endDist;
                     endIndex = i;
