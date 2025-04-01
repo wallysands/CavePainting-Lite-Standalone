@@ -80,6 +80,11 @@ namespace IVLab.MinVR3
             m_CurrentStrokeBackMesh.MarkDynamic();
             m_CurrentStrokeBackVertices = new List<Vector3>();
             m_CurrentStrokeBackIndices = new List<int>();
+
+
+            // Tube Geometry Start
+            //Vector3 brushPosRoom, Quaternion brushRotRoom, float brushWidthRoom, float brushHeightRoom, Color brushColor
+            m_TubeGeometry.Init(m_CurrentStrokeObj.transform.position, m_CurrentStrokeObj.transform.rotation, 10.0f, 10.0f, m_BrushColor);
         }
 
         public void Painting_OnUpdate()
@@ -157,6 +162,11 @@ namespace IVLab.MinVR3
                 m_CurrentStrokeBackMesh.SetIndices(m_CurrentStrokeBackIndices, MeshTopology.Triangles, 0);
                 m_CurrentStrokeBackMesh.RecalculateNormals();
             }
+
+
+            // Tube Geomtry start
+            //Vector3 brushPosRoom, Quaternion brushRotRoom, float brushWidthRoom, float brushHeightRoom, Color brushColor
+            m_TubeGeometry.AddSample(m_CurrentStrokeObj.transform.position, m_CurrentStrokeObj.transform.rotation, 2.0f, 2.0f, m_BrushColor);
         }
 
 
@@ -186,6 +196,11 @@ namespace IVLab.MinVR3
                 Debug.Log("INDEX CHECK " +splineIndex);
                 BeginMorph(spline, splineIndex, currCenters[0], currCenters[^1]);
             }
+
+
+            // Tube Geometry
+            //Vector3 brushPosRoom, Quaternion brushRotRoom, float brushWidthRoom, float brushHeightRoom, Color brushColor)
+            m_TubeGeometry.Complete(m_CurrentStrokeObj.transform.position, m_CurrentStrokeObj.transform.rotation, 10.0f, 10.0f, m_BrushColor);
         }
 
         public Spline FindClosestSpline(List<Vector3> centers, out int bestIndex, out float splineStartIndex, out float splineEndIndex)
@@ -455,6 +470,9 @@ namespace IVLab.MinVR3
         [SerializeField] SplineContainer m_SplineContainer;
 
         [SerializeField] SplineContainer m_SplineColoredContainer;
+
+        // Tube Geometry
+        [SerializeField] private TubeGeometry m_TubeGeometry;
     }
 
 } // namespace
