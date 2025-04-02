@@ -216,7 +216,13 @@ namespace IVLab.MinVR3
                 int splineIndex;
                 Spline spline = FindClosestSpline(m_strokeTransforms, out splineIndex, out Spline drawnSpline);//, out float splineStart, out float splineEnd);
                 Debug.Log("INDEX CHECK " +splineIndex);
-                BeginMorph(spline, splineIndex, drawnSpline);
+                Spline nearestSplineSegment = FindSplineSegment(spline, splineIndex, drawnSpline);
+
+                /// GameObject("Tube Stroke " + m_NumStrokes, typeof(TubeGeometry));
+
+                GameObject go = new GameObject("Morph " + m_NumStrokes, typeof(Morphing));
+                Morphing morph = go.GetComponent<Morphing>();
+                morph.Init(m_CurrentStrokeObj.GetComponent<TubeGeometry>(), nearestSplineSegment, m_ArtworkParentTransform, m_BrushColor);
             }
 
 
@@ -337,7 +343,7 @@ namespace IVLab.MinVR3
             return bestSpline;
         }
 
-        public void BeginMorph(Spline spline, int splineIndex, Spline drawnSpline)//Vector3 splineStart, Vector3 splineEnd)
+        public Spline FindSplineSegment(Spline spline, int splineIndex, Spline drawnSpline)//Vector3 splineStart, Vector3 splineEnd)
         {
 
             // Vector3 splitStart = spline.EvaluatePosition(splineStart);
@@ -372,7 +378,7 @@ namespace IVLab.MinVR3
                 Debug.Log("Error with split");
                 Debug.Log("SPLIT INDEX1: " + startIndex + " SPLIT INDEX2: " +endIndex);
 
-                return;
+                return newSpline;
             }
             else if (startIndex == endIndex)
             {
@@ -395,12 +401,14 @@ namespace IVLab.MinVR3
             m_SplineColoredContainer.GetComponent<SplineExtrude>().Rebuild();
             // Delete spline from original container so it can't be selected a second time
             // Will need to change them back when a reset occurs
+            // PROBABLY NOT NEEDED WITH SEGMENT SELECTIONS
             // m_SplineContainer.RemoveSpline(spline);
             // m_SplineContainer.GetComponent<SplineExtrude>().Rebuild();
 
             // Group knots along spline and associate them with knots on the spline to morph into
             // use Vector3.MoveTowards from the group of knots to the associated knot
             // Once done, delete duplicate knots
+            return newSpline;
         }
 
         // TRANS-ROT-ARTWORK STATE CALLBACKS
