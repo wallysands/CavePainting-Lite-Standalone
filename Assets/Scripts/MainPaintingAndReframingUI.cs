@@ -95,11 +95,16 @@ namespace IVLab.MinVR3
             GameObject frontMeshObj = new GameObject("FrontMesh", typeof(MeshFilter), typeof(MeshRenderer));
             frontMeshObj.transform.SetParent(m_CurrentStrokeObj.transform, false);
             MeshRenderer frontMeshRenderer = frontMeshObj.GetComponent<MeshRenderer>();
-            tube.SetMaterial(m_PaintMaterial);
+            frontMeshRenderer.sharedMaterial = m_PaintMaterial;       // set shared base material
+            Material customizedMaterial = frontMeshRenderer.material; // clones base material
+            customizedMaterial.color = m_BrushColor;                  // customize the clone
+            frontMeshRenderer.sharedMaterial = customizedMaterial;    // set shared to customized
+            tube.SetMaterial(customizedMaterial);
             tube.SetNumFaces(8);
             tube.SetWrapTwice(true);
+            Debug.Log("COLOR OF BRUSH " + m_BrushColor);
             
-            tube.Init(m_BrushCursorTransform.position, m_BrushCursorTransform.rotation, 0.5f, 0.5f, m_BrushColor);
+            tube.Init(m_BrushCursorTransform.position, m_BrushCursorTransform.rotation, 0f, 0f, m_BrushColor);
             m_strokeTransforms = new List<Vector3>();
         }
 
@@ -215,7 +220,7 @@ namespace IVLab.MinVR3
             {
                 int splineIndex;
                 Spline spline = FindClosestSpline(m_strokeTransforms, out splineIndex, out Spline drawnSpline);//, out float splineStart, out float splineEnd);
-                Debug.Log("INDEX CHECK " +splineIndex);
+                // Debug.Log("INDEX CHECK " +splineIndex);
                 Spline nearestSplineSegment = FindSplineSegment(spline, splineIndex, drawnSpline);
 
                 /// GameObject("Tube Stroke " + m_NumStrokes, typeof(TubeGeometry));
@@ -230,7 +235,7 @@ namespace IVLab.MinVR3
 
             TubeGeometry tube = m_CurrentStrokeObj.GetComponent<TubeGeometry>();
             Debug.Assert(tube != null);
-            tube.Complete(m_BrushCursorTransform.position, m_BrushCursorTransform.rotation, 0.5f, 0.5f, m_BrushColor);
+            tube.Complete(m_BrushCursorTransform.position, m_BrushCursorTransform.rotation, 0f, 0f, m_BrushColor);
         }
 
         public Spline FindClosestSpline(List<Vector3> centers, out int bestIndex, out Spline drawnSpline)//, out float splineStartIndex, out float splineEndIndex)
@@ -251,7 +256,7 @@ namespace IVLab.MinVR3
                 //knots.Add(new BezierKnot(new float3(x, y, z)));
             }
             // drawnSpline.Knots = knots;
-            m_SplineColoredContainer.AddSpline(drawnSpline);
+            // m_SplineColoredContainer.AddSpline(drawnSpline);
             // Debug.Log("DRAWING SPLINE: " + drawnSpline.EvaluatePosition(1));
 
             Spline bestSpline = null;
@@ -392,7 +397,7 @@ namespace IVLab.MinVR3
                 newSpline.Add(spline.Knots.ElementAt(i));
                 counter ++;
             }
-            Debug.Log("SPLIT INDEX1: " + startIndex + " SPLIT INDEX2: " +endIndex + " NUMBER OF KNOTS " +counter);
+            // Debug.Log("SPLIT INDEX1: " + startIndex + " SPLIT INDEX2: " +endIndex + " NUMBER OF KNOTS " +counter);
             
 
 

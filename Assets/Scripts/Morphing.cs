@@ -4,10 +4,11 @@ using UnityEngine;
 using System;
 using UnityEngine.Splines;
 using Unity.Mathematics;
+using System.Linq;
 
 public class Morphing : MonoBehaviour
 {
-    public void Init(TubeGeometry startingTube, Spline endingSpline, Transform parentTransform, Color c, float animationSpeed = 1)
+    public void Init(TubeGeometry startingTube, Spline endingSpline, Transform parentTransform, Color c, float animationSpeed = 3)
     {
         m_startingTube = startingTube;
         // m_endingSpline = endingSpline;
@@ -16,7 +17,13 @@ public class Morphing : MonoBehaviour
 
         // convert end spline into a tube
         m_endingTube = CreateTube(endingSpline, m_startingTube);
+        m_startingVertices = m_startingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.vertices;
 
+        // m_Mesh.SetVertices(m_Vertices);
+        // m_Mesh.SetNormals(m_Normals);
+        // m_Mesh.SetColors(m_Colors);
+        // m_Mesh.SetUVs(0, m_TexCoords);
+        // m_Mesh.SetIndices(m_Indices, MeshTopology.Triangles, 0);  
     }
 
     private TubeGeometry CreateTube(Spline spline, TubeGeometry matchTube)
@@ -29,18 +36,29 @@ public class Morphing : MonoBehaviour
         tube.SetNumFaces(matchTube.GetNumFaces());
         tube.SetWrapTwice(matchTube.GetWrapTwice());
 
-        Quaternion d = Quaternion.LookRotation(spline.EvaluateTangent(0));
+        Quaternion d = Quaternion.LookRotation(m_CurrentStrokeObj.transform.TransformDirection(spline.EvaluateTangent(0)));
         
-        tube.Init(spline.EvaluatePosition(0), d, 0.5f, 0.5f, m_brushColor);
+        tube.Init(m_CurrentStrokeObj.transform.TransformPoint(spline.EvaluatePosition(0)), d, 0f, 0f, m_brushColor);
+
+        // segmentsAlongSpline = matchTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.vertices.Length / matchTube.GetNumFaces();
+        segmentsAlongSpline = matchTube.GetVertices().Count / matchTube.GetNumFaces();
+        // Debug.Log("NUM SEGMENTS " + segmentsAlongSpline);
+        Debug.Log("NUM VERTICES START " + matchTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.vertices.Length);
+        // Debug.Log("Num Faces Start " + matchTube.GetNumFaces());
 
         for (int i = 0; i < segmentsAlongSpline; i++)
         {
             float t = i / (float)(segmentsAlongSpline - 1); 
-            d = Quaternion.LookRotation(spline.EvaluateTangent(t));
-            tube.AddSample(spline.EvaluatePosition(t), d, 0.1f, 0.1f, m_brushColor);
+            d = Quaternion.LookRotation(m_CurrentStrokeObj.transform.TransformDirection(spline.EvaluateTangent(t)));
+            tube.AddSample(m_CurrentStrokeObj.transform.TransformPoint(spline.EvaluatePosition(t)), d, 0.1f, 0.1f, m_brushColor);
         }
 
-        tube.Complete(spline.EvaluatePosition(1), d, 0.5f, 0.5f, m_brushColor);
+        tube.Complete(m_CurrentStrokeObj.transform.TransformPoint(spline.EvaluatePosition(1)), d, 0f, 0f, m_brushColor);
+        tube.GetComponent<MeshRenderer>().enabled = false;
+        Debug.Log("NUM VERTICES END " + tube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.vertices.Length);
+        // Debug.Log("Num Faces End " + tube.GetNumFaces());
+        // Debug.Log("NUM SEGMENTS END " + tube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.vertices.Length / tube.GetNumFaces()); 
+
 
         return tube;
     }
@@ -48,13 +66,63 @@ public class Morphing : MonoBehaviour
     void Update()
     {
 
+        if (m_startingTube != null)
+        {
+            // lerp between vertex points on the start tube and end tube
+            Vector3[] movingVerts = m_startingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.vertices;
+            Vector3[] endingVerts = m_endingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.vertices;
+            if (movingVerts == endingVerts || alpha > 1)// || Time.deltaTime / m_animationSpeed > 0.1)
+            {
+                return;
+            }
+            alpha += Time.deltaTime/m_animationSpeed;
+
+            
+            for (int i = 0; i < movingVerts.Length; i++)
+
+            {
+                movingVerts[i] = Vector3.Lerp(m_startingVertices[i], endingVerts[i], alpha); // this works only if the start and end tubes have same number of verts and faces For some reason endingVerts is longer                
+            }
+
+            // Debug.Log("Num starting Verts " + m_startingVertices.Length + " Num ending verts " +endingVerts.Length);
+            // int truncatedEnd =  endingVerts.Length - endingVerts.Length % m_startingTube.GetNumFaces();
+            // float ratio = (float)(truncatedEnd) / (float)(movingVerts.Length);
+            // Debug.Log("RATIO " + ratio);
+            // Debug.Log("DOES RATIO WORK? " +(int)(ratio * movingVerts.Length));
+
+            // for (int i = 0; i < movingVerts.Length-m_startingTube.GetNumFaces()+1; i+= m_startingTube.GetNumFaces())
+            // {
+            //     int endingVertIndex = (int)(ratio * i) - (int)(ratio * i) % m_startingTube.GetNumFaces();
+            //     for (int j = 0; j < m_startingTube.GetNumFaces(); j++)
+            //     {
+            //         if (endingVertIndex + j >= endingVerts.Length)
+            //         {
+            //             Debug.Log("ENDINDEX " + endingVertIndex);
+            //             Debug.Log("J " + j);
+            //         }
+            //         movingVerts[i + j] = Vector3.Lerp(m_startingVertices[i + j], endingVerts[endingVertIndex + j], alpha); // this works only if the start and end tubes have same number of verts and faces
+            //     }
+            // }
+
+            // startingVerts[0] = Vector3.Lerp(startingVerts[0], endingVerts[0], Time.deltaTime/m_animationSpeed);
+            // Debug.Log("MOVED TO " + movingVerts[0]+ " AT TIME " + alpha);
+            // m_startingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.Clear();
+            m_startingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.SetVertices(movingVerts);
+            // m_Mesh.SetNormals(m_Normals);
+            // m_Mesh.SetColors(m_Colors);
+            // m_Mesh.SetUVs(0, m_TexCoords);
+            // m_Mesh.SetIndices(m_Indices, MeshTopology.Triangles, 0);  
+        }
     }
 
     private TubeGeometry m_startingTube;
     // private Spline m_endingSpline;
-    private float m_animationSpeed;
+    private float m_animationSpeed = 3.0f;
     private Color m_brushColor;
     private Transform m_ArtworkParentTransform;
     private TubeGeometry m_endingTube;
     private int segmentsAlongSpline = 100;
+    private Vector3[] m_startingVertices;
+    private float alpha = 0;
+    private GameObject m_CurrentStrokeObj;
 }

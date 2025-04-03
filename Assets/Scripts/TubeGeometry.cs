@@ -236,6 +236,11 @@ public class TubeGeometry : MonoBehaviour
         return m_NFaces;
     }
 
+    public List<Vector3> GetVertices()
+    {
+        return m_Vertices;
+    }
+
 
     [Tooltip("Used to render the stroke's meshes.")]
     [SerializeField] private Material m_Material;
