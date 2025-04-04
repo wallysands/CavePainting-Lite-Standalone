@@ -41,7 +41,7 @@ public class Morphing : MonoBehaviour
         tube.Init(m_CurrentStrokeObj.transform.TransformPoint(spline.EvaluatePosition(0)), d, 0f, 0f, m_brushColor);
 
         // segmentsAlongSpline = matchTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.vertices.Length / matchTube.GetNumFaces();
-        segmentsAlongSpline = matchTube.GetVertices().Count / matchTube.GetNumFaces();
+        segmentsAlongSpline = matchTube.GetVertices().Count / ( matchTube.GetNumFaces() + 1) ;
         // Debug.Log("NUM SEGMENTS " + segmentsAlongSpline);
         Debug.Log("NUM VERTICES START " + matchTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.vertices.Length);
         // Debug.Log("Num Faces Start " + matchTube.GetNumFaces());
@@ -49,8 +49,28 @@ public class Morphing : MonoBehaviour
         for (int i = 0; i < segmentsAlongSpline; i++)
         {
             float t = i / (float)(segmentsAlongSpline - 1); 
-            d = Quaternion.LookRotation(m_CurrentStrokeObj.transform.TransformDirection(spline.EvaluateTangent(t)));
-            tube.AddSample(m_CurrentStrokeObj.transform.TransformPoint(spline.EvaluatePosition(t)), d, 0.1f, 0.1f, m_brushColor);
+            Vector3 look = m_CurrentStrokeObj.transform.TransformDirection(spline.EvaluateTangent(t)).normalized; // z
+            Vector3 up = new Vector3(0,1,0); // y = initial guess
+            if (Mathf.Abs(Vector3.Dot(look, up)) > 0.8f) {
+                // up vector is closely aligned with look, so we had a bad initial guess.
+                up = new Vector3(1,0,0); // update the guess
+            }
+            Vector3 perp = Vector3.Cross(up, look); // x
+            up = Vector3.Cross(look, perp);
+
+            if (Vector3.Dot(up, m_LastUp) < 0) {
+                up = -up;
+            }
+            m_LastUp = up;
+
+            d = Quaternion.LookRotation(look, up);
+
+            //d = Quaternion.LookRotation(m_CurrentStrokeObj.transform.TransformDirection(spline.EvaluateTangent(t)));
+            // tube.AddSample(m_CurrentStrokeObj.transform.TransformPoint(spline.EvaluatePosition(t)), d, 0.05f, 0.05f, m_brushColor);
+            tube.AddSample(m_CurrentStrokeObj.transform.TransformPoint(spline.EvaluatePosition(t)), d, 0.05f, 0.05f, m_brushColor);
+
+            // TO CALCULATE THE DIRECTION (Z) do Quaternion * Vector3.Forward
+            // coroutine
         }
 
         tube.Complete(m_CurrentStrokeObj.transform.TransformPoint(spline.EvaluatePosition(1)), d, 0f, 0f, m_brushColor);
@@ -125,4 +145,6 @@ public class Morphing : MonoBehaviour
     private Vector3[] m_startingVertices;
     private float alpha = 0;
     private GameObject m_CurrentStrokeObj;
+
+    private Vector3 m_LastUp = new Vector3(0,1,0);
 }

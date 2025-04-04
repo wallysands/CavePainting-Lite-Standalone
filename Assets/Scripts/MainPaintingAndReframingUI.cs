@@ -102,7 +102,6 @@ namespace IVLab.MinVR3
             tube.SetMaterial(customizedMaterial);
             tube.SetNumFaces(8);
             tube.SetWrapTwice(true);
-            Debug.Log("COLOR OF BRUSH " + m_BrushColor);
             
             tube.Init(m_BrushCursorTransform.position, m_BrushCursorTransform.rotation, 0f, 0f, m_BrushColor);
             m_strokeTransforms = new List<Vector3>();
@@ -189,7 +188,7 @@ namespace IVLab.MinVR3
             
             TubeGeometry tube = m_CurrentStrokeObj.GetComponent<TubeGeometry>();
             Debug.Assert(tube != null);
-            tube.AddSample(m_BrushCursorTransform.position, m_BrushCursorTransform.rotation, 0.1f, 0.1f, m_BrushColor);
+            tube.AddSample(m_BrushCursorTransform.position, m_BrushCursorTransform.rotation, 0.05f, 0.05f, m_BrushColor);
             m_strokeTransforms.Add(m_CurrentStrokeObj.transform.WorldPointToLocalSpace(m_BrushCursorTransform.position));
         }
 
@@ -222,8 +221,6 @@ namespace IVLab.MinVR3
                 Spline spline = FindClosestSpline(m_strokeTransforms, out splineIndex, out Spline drawnSpline);//, out float splineStart, out float splineEnd);
                 // Debug.Log("INDEX CHECK " +splineIndex);
                 Spline nearestSplineSegment = FindSplineSegment(spline, splineIndex, drawnSpline);
-
-                /// GameObject("Tube Stroke " + m_NumStrokes, typeof(TubeGeometry));
 
                 GameObject go = new GameObject("Morph " + m_NumStrokes, typeof(Morphing));
                 Morphing morph = go.GetComponent<Morphing>();
@@ -359,21 +356,33 @@ namespace IVLab.MinVR3
             float bestEndDist = float.MaxValue;
             Spline newSpline = new Spline();
 
+            float w_dist = 10;
+            float w_dir = 1;
+
             for (int i = 0; i < spline.Knots.Count(); i++)
             {
                 var k = spline.Knots.ElementAt(i).Position;
-                var startDist = Vector3.Distance(k, drawnSpline[0].Position);
-                var endDist = Vector3.Distance(k, drawnSpline[^1].Position);
+                var startSimilarity = Vector3.Distance(k, drawnSpline[0].Position);
+                var endSimilarity = Vector3.Distance(k, drawnSpline[^1].Position);
+
+                // compare quaternions for direction?
+                // var kd = spline.Knots.ElementAt(i).Rotation.eulerAngles;
+                // var startRot = kd * Quaternion.Inverse(drawnSpline[0].Rotation);
+                // var endRot = kd * Quaternion.Inverse(drawnSpline[^1].Rotation);
+
+                // float startSimilarity = w_dist * Mathf.Pow(startDist, 2) + Mathf.Abs(w_dir * startRot); 
+                // float endSimilarity = w_dist * Mathf.Pow(endDist, 2) + Mathf.Abs(w_dir * endRot); 
+
 
                 // If the split position is between two control points, we split here
-                if (startDist < bestStartDist)
+                if (startSimilarity < bestStartDist)
                 {
-                    bestStartDist = startDist;
+                    bestStartDist = startSimilarity;
                     startIndex = i;
                 }
-                if (endDist < bestEndDist)
+                if (endSimilarity < bestEndDist)
                 {
-                    bestEndDist = endDist;
+                    bestEndDist = endSimilarity;
                     endIndex = i;
                 }
             }

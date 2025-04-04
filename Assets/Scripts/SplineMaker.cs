@@ -24,7 +24,7 @@ public class SplineMaker : MonoBehaviour
 
         Spline spline = m_splineContainer.AddSpline();
         List<BezierKnot> knots = new List<BezierKnot>();
-        float m_SplineTension = 1/4f;
+        float m_SplineTension = 1/3f;
 
         int rowNum = 0;
         bool firstEmpty = true;
