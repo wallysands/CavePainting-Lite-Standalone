@@ -105,6 +105,11 @@ namespace IVLab.MinVR3
             
             tube.Init(m_BrushCursorTransform.position, m_BrushCursorTransform.rotation, 0f, 0f, m_BrushColor);
             m_strokeTransforms = new List<Vector3>();
+            m_strokeSimilarities = new float[m_SplineContainer.Splines.Count];
+            for (int i = 0; i<m_strokeSimilarities.Length; i++)
+            {
+                m_strokeSimilarities[i] = 0;
+            }
         }
 
         public void Painting_OnUpdate()
@@ -190,6 +195,11 @@ namespace IVLab.MinVR3
             Debug.Assert(tube != null);
             tube.AddSample(m_BrushCursorTransform.position, m_BrushCursorTransform.rotation, 0.05f, 0.05f, m_BrushColor);
             m_strokeTransforms.Add(m_CurrentStrokeObj.transform.WorldPointToLocalSpace(m_BrushCursorTransform.position));
+            float[] pointSimilarities = FindSplineSimilarities(m_BrushCursorTransform.position, m_BrushCursorTransform.rotation);
+            for (int i = 0; i < m_strokeSimilarities.Length; i++)
+            {
+                m_strokeSimilarities[i] += pointSimilarities[i]; 
+            }
         }
 
 
@@ -217,8 +227,15 @@ namespace IVLab.MinVR3
             
             if (m_strokeTransforms.Count > 0)
             {
-                int splineIndex;
-                Spline spline = FindClosestSpline(m_strokeTransforms, out splineIndex, out Spline drawnSpline);//, out float splineStart, out float splineEnd);
+                int splineIndex = FindClosestSplineIndex();
+                // Spline spline = FindClosestSpline(m_strokeTransforms, out splineIndex, out Spline drawnSpline);//, out float splineStart, out float splineEnd);
+                Spline drawnSpline = new Spline();
+                foreach (Vector3 t in m_strokeTransforms)
+                {
+                    drawnSpline.Add(new BezierKnot(t), TangentMode.AutoSmooth);
+                }
+                Spline spline = m_SplineContainer.Splines[splineIndex];
+                
                 // Debug.Log("INDEX CHECK " +splineIndex);
                 Spline nearestSplineSegment = FindSplineSegment(spline, splineIndex, drawnSpline);
 
@@ -239,9 +256,6 @@ namespace IVLab.MinVR3
         {
             float splineStartIndex = 0;
             float splineEndIndex = 1;
-            int w_dist = 10;
-            int w_dir = 1;
-            int sampleCount = 50;
 
             // Spline conversion is currently slightly shifted, possible due to float precision. 
             drawnSpline = new Spline();
@@ -345,6 +359,48 @@ namespace IVLab.MinVR3
             return bestSpline;
         }
 
+        public int FindClosestSplineIndex()
+        {
+            int index = 0;
+            float value = float.MaxValue;
+            for (int i = 0; i < m_strokeSimilarities.Length; i++)
+            {
+                if (m_strokeSimilarities[i] < value)
+                {
+                    index = i;
+                    value = m_strokeSimilarities[i];
+                }
+            }
+            return index;
+        }
+
+        public float[] FindSplineSimilarities(Vector3 currPos, Quaternion currQuat)
+        {
+            int splineCount = m_SplineContainer.Splines.Count;
+            float[] similarities = new float[splineCount];
+            Vector3 currTan = currQuat * Vector3.forward;
+            for (int i = 0; i < splineCount; i++)
+            {
+                similarities[i] = float.MaxValue;
+                // Quaternion * Vector3.Forward
+                for (int j = 0; j < sampleCount; j++)
+                {
+                    float alongSpline = j / (float)(sampleCount - 1);
+                    Vector3 splineTan = m_SplineContainer.Splines[i].EvaluateTangent(alongSpline);
+                    Vector3 splinePos = m_SplineContainer.Splines[i].EvaluatePosition(alongSpline);
+
+                    float distance = Vector3.Distance(currPos, splinePos);
+                    float sim = w_dist * Mathf.Pow(distance, 2) + Mathf.Abs(w_dir * Vector3.Dot(currTan, splineTan)); 
+
+                    if (sim < similarities[i])
+                    {
+                        similarities[i] = sim;
+                    }
+                }
+            }
+            return similarities;
+        }
+
         public Spline FindSplineSegment(Spline spline, int splineIndex, Spline drawnSpline)//Vector3 splineStart, Vector3 splineEnd)
         {
 
@@ -356,22 +412,19 @@ namespace IVLab.MinVR3
             float bestEndDist = float.MaxValue;
             Spline newSpline = new Spline();
 
-            float w_dist = 10;
-            float w_dir = 1;
-
             for (int i = 0; i < spline.Knots.Count(); i++)
             {
                 var k = spline.Knots.ElementAt(i).Position;
-                var startSimilarity = Vector3.Distance(k, drawnSpline[0].Position);
-                var endSimilarity = Vector3.Distance(k, drawnSpline[^1].Position);
+                var t = (spline.Knots.ElementAt(i).TangentIn + spline.Knots.ElementAt(i).TangentOut) / 2;
+                var startDist = Vector3.Distance(k, drawnSpline[0].Position);
+                var endDist = Vector3.Distance(k, drawnSpline[^1].Position);
 
                 // compare quaternions for direction?
-                // var kd = spline.Knots.ElementAt(i).Rotation.eulerAngles;
-                // var startRot = kd * Quaternion.Inverse(drawnSpline[0].Rotation);
-                // var endRot = kd * Quaternion.Inverse(drawnSpline[^1].Rotation);
+                var startRot = (Quaternion)drawnSpline[0].Rotation * Vector3.forward;
+                var endRot = (Quaternion)drawnSpline[^1].Rotation * Vector3.forward;
 
-                // float startSimilarity = w_dist * Mathf.Pow(startDist, 2) + Mathf.Abs(w_dir * startRot); 
-                // float endSimilarity = w_dist * Mathf.Pow(endDist, 2) + Mathf.Abs(w_dir * endRot); 
+                float startSimilarity = w_dist * Mathf.Pow(startDist, 2) + Mathf.Abs(w_dir * Vector3.Dot(t, startRot)); 
+                float endSimilarity = w_dist * Mathf.Pow(endDist, 2) + Mathf.Abs(w_dir * Vector3.Dot(t,endRot)); 
 
 
                 // If the split position is between two control points, we split here
@@ -521,6 +574,10 @@ namespace IVLab.MinVR3
 
         // Tube Geometry
         [SerializeField] private TubeGeometry m_TubeGeometry;
+        private float w_dir = 1;
+        private float w_dist = 10;
+        private int sampleCount = 50;
+        private float[] m_strokeSimilarities;
     }
 
 } // namespace
