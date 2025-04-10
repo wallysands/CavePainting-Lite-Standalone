@@ -7,7 +7,7 @@ using System.Linq;
 namespace IVLab.MinVR3
 {
 
-    public class MainPaintingAndReframingUI : MonoBehaviour
+    public class MainPaintingAndReframingUI : MonoBehaviour//, IVREventListener
     {
         public Color brushColor {
             get { return m_BrushColor; }
@@ -24,6 +24,17 @@ namespace IVLab.MinVR3
         {
             SetBrushColor(new Color(c[0], c[1], c[2], c[3]));
         }
+
+        // void OnEnable()
+        // {
+        //     StartListening();
+        // }
+
+        // void OnDisable()
+        // {
+        //     StopListening();
+        // }
+        
 
         private void Reset()
         {
@@ -195,11 +206,12 @@ namespace IVLab.MinVR3
             Debug.Assert(tube != null);
             tube.AddSample(m_BrushCursorTransform.position, m_BrushCursorTransform.rotation, 0.05f, 0.05f, m_BrushColor);
             m_strokeTransforms.Add(m_CurrentStrokeObj.transform.WorldPointToLocalSpace(m_BrushCursorTransform.position));
-            float[] pointSimilarities = FindSplineSimilarities(m_BrushCursorTransform.position, m_BrushCursorTransform.rotation);
+            float[] pointSimilarities = FindSplineSimilarities(m_BrushCursorTransform.LocalPointToWorldSpace(new Vector3 (0,0,0)), m_BrushCursorTransform.rotation);
             for (int i = 0; i < m_strokeSimilarities.Length; i++)
             {
                 m_strokeSimilarities[i] += pointSimilarities[i]; 
             }
+            // m_BrushCursorTransform.LocalPointToWorldSpace(
         }
 
 
@@ -227,17 +239,18 @@ namespace IVLab.MinVR3
             
             if (m_strokeTransforms.Count > 0)
             {
+                // Spline spline = FindClosestSpline(m_strokeTransforms, out int splineIndex, out Spline drawnSpline);//, out float splineStart, out float splineEnd);
                 int splineIndex = FindClosestSplineIndex();
-                // Spline spline = FindClosestSpline(m_strokeTransforms, out splineIndex, out Spline drawnSpline);//, out float splineStart, out float splineEnd);
                 Spline drawnSpline = new Spline();
                 foreach (Vector3 t in m_strokeTransforms)
                 {
                     drawnSpline.Add(new BezierKnot(t), TangentMode.AutoSmooth);
                 }
+                // m_SplineColoredContainer.AddSpline(drawnSpline);
                 Spline spline = m_SplineContainer.Splines[splineIndex];
                 
                 // Debug.Log("INDEX CHECK " +splineIndex);
-                Spline nearestSplineSegment = FindSplineSegment(spline, splineIndex, drawnSpline);
+                Spline nearestSplineSegment = FindSplineSegmentUsingLength(spline, splineIndex, drawnSpline);
 
                 GameObject go = new GameObject("Morph " + m_NumStrokes, typeof(Morphing));
                 Morphing morph = go.GetComponent<Morphing>();
@@ -250,6 +263,10 @@ namespace IVLab.MinVR3
             TubeGeometry tube = m_CurrentStrokeObj.GetComponent<TubeGeometry>();
             Debug.Assert(tube != null);
             tube.Complete(m_BrushCursorTransform.position, m_BrushCursorTransform.rotation, 0f, 0f, m_BrushColor);
+            for (int i = 0; i<m_strokeSimilarities.Length; i++)
+            {
+                m_strokeSimilarities[i] = 0;
+            }
         }
 
         public Spline FindClosestSpline(List<Vector3> centers, out int bestIndex, out Spline drawnSpline)//, out float splineStartIndex, out float splineEndIndex)
@@ -361,7 +378,7 @@ namespace IVLab.MinVR3
 
         public int FindClosestSplineIndex()
         {
-            int index = 0;
+            int index = -1;
             float value = float.MaxValue;
             for (int i = 0; i < m_strokeSimilarities.Length; i++)
             {
@@ -371,6 +388,7 @@ namespace IVLab.MinVR3
                     value = m_strokeSimilarities[i];
                 }
             }
+            // Debug.Log("FINDING SPLINE INDEX: " + index);
             return index;
         }
 
@@ -378,34 +396,40 @@ namespace IVLab.MinVR3
         {
             int splineCount = m_SplineContainer.Splines.Count;
             float[] similarities = new float[splineCount];
-            Vector3 currTan = currQuat * Vector3.forward;
+            int testind = -1;
+            Vector3[] test = new Vector3[2];
+            // Vector3 currTan = (currQuat * Vector3.forward); // doesn't make sense due to rotation of hand does not mean the tangent of line.
             for (int i = 0; i < splineCount; i++)
             {
                 similarities[i] = float.MaxValue;
-                // Quaternion * Vector3.Forward
+
                 for (int j = 0; j < sampleCount; j++)
                 {
                     float alongSpline = j / (float)(sampleCount - 1);
-                    Vector3 splineTan = m_SplineContainer.Splines[i].EvaluateTangent(alongSpline);
-                    Vector3 splinePos = m_SplineContainer.Splines[i].EvaluatePosition(alongSpline);
+                    Vector3 splineTan = m_SplineContainer.transform.LocalPointToWorldSpace(m_SplineContainer.Splines[i].EvaluateTangent(alongSpline)); // need to adjust to world version
+                    Vector3 splinePos = m_SplineContainer.transform.LocalPointToWorldSpace(m_SplineContainer.Splines[i].EvaluatePosition(alongSpline));
 
                     float distance = Vector3.Distance(currPos, splinePos);
-                    float sim = w_dist * Mathf.Pow(distance, 2) + Mathf.Abs(w_dir * Vector3.Dot(currTan, splineTan)); 
+                    // float distance = (currPos - splinePos).sqrMagnitude;
+                    // float sim = w_dist * Mathf.Pow(distance, 2) + Mathf.Abs(w_dir * Vector3.Dot(currTan.normalized, splineTan.normalized)); 
+                    float sim = w_dist * distance;// + Mathf.Abs(w_dir * Vector3.Dot(currTan.normalized, splineTan.normalized)); 
 
                     if (sim < similarities[i])
                     {
                         similarities[i] = sim;
+                        test[0] = currPos;
+                        test[1] = splinePos;
+                        testind = i;
                     }
                 }
             }
+            // Debug.Log("Current: " + currPos);
+            // Debug.Log("Closest: " + test[1] + " With index: " + testind);
             return similarities;
         }
 
         public Spline FindSplineSegment(Spline spline, int splineIndex, Spline drawnSpline)//Vector3 splineStart, Vector3 splineEnd)
         {
-
-            // Vector3 splitStart = spline.EvaluatePosition(splineStart);
-            // Vector3 splitEnd = spline.EvaluatePosition(splineEnd);
             int startIndex = -1;
             int endIndex = -1;
             float bestStartDist = float.MaxValue;
@@ -422,6 +446,8 @@ namespace IVLab.MinVR3
                 // compare quaternions for direction?
                 var startRot = (Quaternion)drawnSpline[0].Rotation * Vector3.forward;
                 var endRot = (Quaternion)drawnSpline[^1].Rotation * Vector3.forward;
+
+
 
                 float startSimilarity = w_dist * Mathf.Pow(startDist, 2) + Mathf.Abs(w_dir * Vector3.Dot(t, startRot)); 
                 float endSimilarity = w_dist * Mathf.Pow(endDist, 2) + Mathf.Abs(w_dir * Vector3.Dot(t,endRot)); 
@@ -449,7 +475,14 @@ namespace IVLab.MinVR3
             }
             else if (startIndex == endIndex)
             {
-                endIndex = (endIndex + 1)%spline.Knots.Count();
+                if (endIndex < spline.Knots.Count() - 1)
+                {
+                    endIndex += 1;
+                }
+                else
+                {
+                    startIndex -= 1;
+                }
                 Debug.Log("Split at same location");
             }
             int counter = 0;
@@ -459,22 +492,78 @@ namespace IVLab.MinVR3
                 newSpline.Add(spline.Knots.ElementAt(i));
                 counter ++;
             }
-            // Debug.Log("SPLIT INDEX1: " + startIndex + " SPLIT INDEX2: " +endIndex + " NUMBER OF KNOTS " +counter);
-            
-
-
 
             m_SplineColoredContainer.AddSpline(newSpline);
             m_SplineColoredContainer.GetComponent<SplineExtrude>().Rebuild();
-            // Delete spline from original container so it can't be selected a second time
-            // Will need to change them back when a reset occurs
-            // PROBABLY NOT NEEDED WITH SEGMENT SELECTIONS
-            // m_SplineContainer.RemoveSpline(spline);
-            // m_SplineContainer.GetComponent<SplineExtrude>().Rebuild();
+            return newSpline;
+        }
 
-            // Group knots along spline and associate them with knots on the spline to morph into
-            // use Vector3.MoveTowards from the group of knots to the associated knot
-            // Once done, delete duplicate knots
+        public Spline FindSplineSegmentUsingLength(Spline spline, int splineIndex, Spline drawnSpline)//Vector3 splineStart, Vector3 splineEnd)
+        {
+            int startIndex = -1;
+            int endIndex = -1;
+            float bestStartDist = float.MaxValue;
+            float bestEndDist = float.MaxValue;
+            Spline newSpline = new Spline();
+
+            var startDrawnTan = (Quaternion)drawnSpline[0].Rotation * Vector3.forward;
+            var endDrawnTan = (Quaternion)drawnSpline[^1].Rotation * Vector3.forward;
+
+            float bestSimilarity = float.MaxValue;
+            float[] precomputedKnotLengths = new float[spline.Knots.Count()];
+            for (int i = 0; i < spline.Knots.Count(); i++)
+            {
+                precomputedKnotLengths[i] = spline.GetCurveLength(i);
+            }
+
+            for (int i = 0; i < spline.Knots.Count(); i++)
+            {
+                var startTargetKnot = spline.Knots.ElementAt(i);
+                var startTargetPos = startTargetKnot.Position;
+                var startTargetTan = (startTargetKnot.TangentIn + startTargetKnot.TangentOut) / 2;
+                var startDist = Vector3.Distance(startTargetPos, drawnSpline[0].Position);
+                float startSimilarity = w_dist * Mathf.Pow(startDist, 2) + Mathf.Abs(w_dir * Vector3.Dot(startDrawnTan, startTargetTan)); 
+                for (int j = 0; j < spline.Knots.Count(); j++)
+                {
+                    if (i != j)
+                    {
+                        var endTargetKnot = spline.Knots.ElementAt(j);
+                        var endTargetPos = endTargetKnot.Position;
+                        var endTargetTan = (endTargetKnot.TangentIn + endTargetKnot.TangentOut) / 2;
+                        var endDist = Vector3.Distance(endTargetPos, drawnSpline[^1].Position);
+                        float endSimilarity = w_dist * Mathf.Pow(endDist, 2) + Mathf.Abs(w_dir * Vector3.Dot(endDrawnTan,endTargetTan));
+                        // var targetLength = new SplineSlice<Spline>(spline, new SplineRange(Mathf.Min(i,j), Mathf.Abs(i - j))).GetLength();
+                        var targetLength = precomputedKnotLengths[Mathf.Min(i, j)..Mathf.Max(i,j)].Sum(); 
+                        float totalSimilarity = startSimilarity + endSimilarity + Mathf.Abs(drawnSpline.GetLength() - targetLength);
+                        if (totalSimilarity < bestSimilarity)
+                        {
+                            bestSimilarity = totalSimilarity;
+                            startIndex = i;
+                            endIndex = j;
+                            Debug.Log("TARGET LENGTH: " + targetLength + " DRAWN LENGTH: " + drawnSpline.GetLength());
+                        }
+                        
+                    }
+                }
+            }
+
+            if (startIndex == float.MaxValue || endIndex == float.MaxValue)
+            {
+                Debug.Log("Error with split");
+                Debug.Log("SPLIT INDEX1: " + startIndex + " SPLIT INDEX2: " +endIndex);
+
+                return newSpline;
+            }
+            int counter = 0;
+
+            for (int i = Mathf.Min(startIndex, endIndex); i <= Mathf.Max(startIndex, endIndex); i++)
+            {
+                newSpline.Add(spline.Knots.ElementAt(i));
+                counter ++;
+            }
+
+            m_SplineColoredContainer.AddSpline(newSpline);
+            m_SplineColoredContainer.GetComponent<SplineExtrude>().Rebuild();
             return newSpline;
         }
 
@@ -527,6 +616,26 @@ namespace IVLab.MinVR3
             m_LastBrushPos = brushPosWorld;
         }
 
+        // public void StartListening()
+        // {
+        //     VREngine.Instance.eventManager.AddEventListener(this);
+        // }
+        // public void StopListening()
+        // {
+        //     VREngine.Instance?.eventManager?.AddEventListener(this);
+        // }
+
+        // public void OnVREvent(VREvent vrEvent)
+        // {
+        //     if (vrEvent.Matches(m_BrushPosEvent))
+        //     {
+        //         m_BrushPosInWorld = vrEvent.GetData<Vector3>();
+        //     }
+        //     else if (vrEvent.Matches(m_BrushRotEvent))
+        //     {
+        //         m_BrushRotInWorld = vrEvent.GetData<Quaternion>();
+        //     }
+        // }
 
         [Tooltip("Parent Transform for any 3D geometry produced by painting.")]
         [SerializeField] private Transform m_ArtworkParentTransform;
@@ -578,6 +687,12 @@ namespace IVLab.MinVR3
         private float w_dist = 10;
         private int sampleCount = 50;
         private float[] m_strokeSimilarities;
+        
+        // [Header("VR Events")]
+        // [SerializeField] private VREventPrototypeVector3 m_BrushPosEvent;
+        // [SerializeField] private VREventPrototypeQuaternion m_BrushRotEvent;
+        // private Vector3 m_BrushPosInWorld;
+        // private Quaternion m_BrushRotInWorld;
     }
 
 } // namespace
