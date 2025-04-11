@@ -201,10 +201,11 @@ namespace IVLab.MinVR3
 
 
             // Tube Geomtry start
-            
+            Vector3 brushScale = m_BrushCursorTransform.localScale;
+
             TubeGeometry tube = m_CurrentStrokeObj.GetComponent<TubeGeometry>();
             Debug.Assert(tube != null);
-            tube.AddSample(m_BrushCursorTransform.position, m_BrushCursorTransform.rotation, 0.05f, 0.05f, m_BrushColor);
+            tube.AddSample(m_BrushCursorTransform.position, m_BrushCursorTransform.rotation, brushScale.x, brushScale.y, m_BrushColor);
             m_strokeTransforms.Add(m_CurrentStrokeObj.transform.WorldPointToLocalSpace(m_BrushCursorTransform.position));
             float[] pointSimilarities = FindSplineSimilarities(m_BrushCursorTransform.LocalPointToWorldSpace(new Vector3 (0,0,0)), m_BrushCursorTransform.rotation);
             for (int i = 0; i < m_strokeSimilarities.Length; i++)
@@ -254,7 +255,7 @@ namespace IVLab.MinVR3
 
                 GameObject go = new GameObject("Morph " + m_NumStrokes, typeof(Morphing));
                 Morphing morph = go.GetComponent<Morphing>();
-                morph.Init(m_CurrentStrokeObj.GetComponent<TubeGeometry>(), nearestSplineSegment, m_ArtworkParentTransform, m_BrushColor);
+                morph.Init(m_CurrentStrokeObj.GetComponent<TubeGeometry>(), nearestSplineSegment, m_ArtworkParentTransform, m_BrushColor, m_BrushCursorTransform.localScale);
             }
 
 
@@ -562,8 +563,8 @@ namespace IVLab.MinVR3
                 counter ++;
             }
 
-            m_SplineColoredContainer.AddSpline(newSpline);
-            m_SplineColoredContainer.GetComponent<SplineExtrude>().Rebuild();
+            //m_SplineColoredContainer.AddSpline(newSpline);
+            //m_SplineColoredContainer.GetComponent<SplineExtrude>().Rebuild();
             return newSpline;
         }
 

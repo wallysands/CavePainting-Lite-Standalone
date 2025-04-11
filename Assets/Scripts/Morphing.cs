@@ -8,12 +8,13 @@ using System.Linq;
 
 public class Morphing : MonoBehaviour
 {
-    public void Init(TubeGeometry startingTube, Spline endingSpline, Transform parentTransform, Color c, float animationSpeed = 3)
+    public void Init(TubeGeometry startingTube, Spline endingSpline, Transform parentTransform, Color c, Vector3 brushScale, float animationSpeed = 3)
     {
         m_startingTube = startingTube;
         // m_endingSpline = endingSpline;
         m_brushColor = c;
         m_ArtworkParentTransform = parentTransform;
+        m_brushScale = brushScale;
 
         // convert end spline into a tube
         m_endingTube = CreateTube(endingSpline, m_startingTube);
@@ -67,7 +68,7 @@ public class Morphing : MonoBehaviour
 
             //d = Quaternion.LookRotation(m_CurrentStrokeObj.transform.TransformDirection(spline.EvaluateTangent(t)));
             // tube.AddSample(m_CurrentStrokeObj.transform.TransformPoint(spline.EvaluatePosition(t)), d, 0.05f, 0.05f, m_brushColor);
-            tube.AddSample(m_CurrentStrokeObj.transform.TransformPoint(spline.EvaluatePosition(t)), d, 0.05f, 0.05f, m_brushColor);
+            tube.AddSample(m_CurrentStrokeObj.transform.TransformPoint(spline.EvaluatePosition(t)), d, m_brushScale.x, m_brushScale.y, m_brushColor);
 
             // TO CALCULATE THE DIRECTION (Z) do Quaternion * Vector3.Forward
             // coroutine
@@ -147,4 +148,5 @@ public class Morphing : MonoBehaviour
     private GameObject m_CurrentStrokeObj;
 
     private Vector3 m_LastUp = new Vector3(0,1,0);
+    private Vector3 m_brushScale;
 }
