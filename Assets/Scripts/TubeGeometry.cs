@@ -221,6 +221,26 @@ public class TubeGeometry : MonoBehaviour
         Debug.Assert(m_ArcLengths == null || m_ArcLengths.Count == 0);
     }
 
+    public Material GetMaterial()
+    {
+        return m_Material;
+    }
+
+    public bool GetWrapTwice()
+    {
+        return m_WrapTwice;
+    }
+
+    public int GetNumFaces()
+    {
+        return m_NFaces;
+    }
+
+    public List<Vector3> GetVertices()
+    {
+        return m_Vertices;
+    }
+
 
     [Tooltip("Used to render the stroke's meshes.")]
     [SerializeField] private Material m_Material;
