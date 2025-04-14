@@ -407,13 +407,14 @@ namespace IVLab.MinVR3
                 for (int j = 0; j < sampleCount; j++)
                 {
                     float alongSpline = j / (float)(sampleCount - 1);
-                    Vector3 splineTan = m_SplineContainer.transform.LocalPointToWorldSpace(m_SplineContainer.Splines[i].EvaluateTangent(alongSpline)); // need to adjust to world version
+                    Vector3 splineTan = m_SplineContainer.transform.LocalPointToWorldSpace(m_SplineContainer.Splines[i].EvaluateTangent(alongSpline));
                     Vector3 splinePos = m_SplineContainer.transform.LocalPointToWorldSpace(m_SplineContainer.Splines[i].EvaluatePosition(alongSpline));
 
-                    float distance = Vector3.Distance(currPos, splinePos);
-                    // float distance = (currPos - splinePos).sqrMagnitude;
+                    // float distance = Vector3.Distance(currPos, splinePos);
+                    float distance = (currPos - splinePos).sqrMagnitude;
                     // float sim = w_dist * Mathf.Pow(distance, 2) + Mathf.Abs(w_dir * Vector3.Dot(currTan.normalized, splineTan.normalized)); 
                     float sim = w_dist * distance;// + Mathf.Abs(w_dir * Vector3.Dot(currTan.normalized, splineTan.normalized)); 
+                    // TODO: FIX DIRECTION CALC
 
                     if (sim < similarities[i])
                     {
