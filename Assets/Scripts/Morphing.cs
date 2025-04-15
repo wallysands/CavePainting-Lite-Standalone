@@ -44,7 +44,7 @@ public class Morphing : MonoBehaviour
         // segmentsAlongSpline = matchTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.vertices.Length / matchTube.GetNumFaces();
         segmentsAlongSpline = matchTube.GetVertices().Count / ( matchTube.GetNumFaces() + 1) ;
         // Debug.Log("NUM SEGMENTS " + segmentsAlongSpline);
-        Debug.Log("NUM VERTICES START " + matchTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.vertices.Length);
+        // Debug.Log("NUM VERTICES START " + matchTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.vertices.Length);
         // Debug.Log("Num Faces Start " + matchTube.GetNumFaces());
 
         for (int i = 0; i < segmentsAlongSpline; i++)
@@ -76,7 +76,7 @@ public class Morphing : MonoBehaviour
 
         tube.Complete(m_CurrentStrokeObj.transform.TransformPoint(spline.EvaluatePosition(1)), d, 0f, 0f, m_brushColor);
         tube.GetComponent<MeshRenderer>().enabled = false;
-        Debug.Log("NUM VERTICES END " + tube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.vertices.Length);
+        // Debug.Log("NUM VERTICES END " + tube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.vertices.Length);
         // Debug.Log("Num Faces End " + tube.GetNumFaces());
         // Debug.Log("NUM SEGMENTS END " + tube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.vertices.Length / tube.GetNumFaces()); 
 
@@ -92,6 +92,21 @@ public class Morphing : MonoBehaviour
             // lerp between vertex points on the start tube and end tube
             Vector3[] movingVerts = m_startingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.vertices;
             Vector3[] endingVerts = m_endingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.vertices;
+            // If the tube would flip when morphing, reorganize vertices so it doesn't
+            if (Vector3.Distance(movingVerts[0], endingVerts[0]) >= Vector3.Distance(movingVerts[^1], endingVerts[0]))
+            {
+                int faces = m_startingTube.GetNumFaces() + 1;
+                endingVerts = endingVerts.Reverse().ToArray();
+                Vector3[] temp = new Vector3[endingVerts.Length];
+                Debug.Log("FLIPPING VERTS " + endingVerts.Length + " " + (int)(1.9));
+                for (int i = 0; i < endingVerts.Length; i++)
+                {
+                    //=FLOOR(A1/($C$3+1)) * ($C$3+1)  + MOD($C$3 - A1,($C$3 + 1))
+                    temp[i] = endingVerts[(int)(i/(faces)) * faces + ((faces - 1 - i) % faces)];
+                }
+                endingVerts = temp;
+                m_endingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.vertices = endingVerts;
+            }
             if (movingVerts == endingVerts || alpha > 1)// || Time.deltaTime / m_animationSpeed > 0.1)
             {
                 return;
@@ -100,9 +115,8 @@ public class Morphing : MonoBehaviour
 
             
             for (int i = 0; i < movingVerts.Length; i++)
-
             {
-                movingVerts[i] = Vector3.Lerp(m_startingVertices[i], endingVerts[i], alpha); // this works only if the start and end tubes have same number of verts and faces For some reason endingVerts is longer                
+                movingVerts[i] = Vector3.Lerp(m_startingVertices[i], endingVerts[i], alpha); // this works only if the start and end tubes have same number of verts and faces                 
             }
 
             // Debug.Log("Num starting Verts " + m_startingVertices.Length + " Num ending verts " +endingVerts.Length);

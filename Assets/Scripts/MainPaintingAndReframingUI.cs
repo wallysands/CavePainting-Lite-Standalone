@@ -542,7 +542,7 @@ namespace IVLab.MinVR3
                             bestSimilarity = totalSimilarity;
                             startIndex = i;
                             endIndex = j;
-                            Debug.Log("TARGET LENGTH: " + targetLength + " DRAWN LENGTH: " + drawnSpline.GetLength());
+                            // Debug.Log("TARGET LENGTH: " + targetLength + " DRAWN LENGTH: " + drawnSpline.GetLength());
                         }
                         
                     }
