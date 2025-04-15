@@ -10,12 +10,14 @@ public class SplineMaker : MonoBehaviour
     [SerializeField] private Transform m_ArtworkParentTransform;
     [SerializeField] public TextAsset testAssetData;
     public SplineContainer m_splineContainer;
+    public SpatialGrid m_spatialGrid;
 
     // Start is called before the first frame update
     void Start()
     {
         ReadCSV(testAssetData);
         m_splineContainer.transform.SetParent(m_ArtworkParentTransform, false);
+        m_spatialGrid.Init();
     }
 
     void ReadCSV(TextAsset textAsset)

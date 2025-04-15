@@ -684,11 +684,12 @@ namespace IVLab.MinVR3
         private List<Vector3> m_strokeTransforms;
 
         // Tube Geometry
-        [SerializeField] private TubeGeometry m_TubeGeometry;
+        private TubeGeometry m_TubeGeometry;
         private float w_dir = 1;
         private float w_dist = 10;
         private int sampleCount = 50;
         private float[] m_strokeSimilarities;
+        public SpatialGrid m_spatialGrid;
         
         // [Header("VR Events")]
         // [SerializeField] private VREventPrototypeVector3 m_BrushPosEvent;
