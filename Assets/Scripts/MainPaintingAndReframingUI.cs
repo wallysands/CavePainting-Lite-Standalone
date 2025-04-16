@@ -207,11 +207,7 @@ namespace IVLab.MinVR3
             Debug.Assert(tube != null);
             tube.AddSample(m_BrushCursorTransform.position, m_BrushCursorTransform.rotation, brushScale.x, brushScale.y, m_BrushColor);
             m_strokeTransforms.Add(m_CurrentStrokeObj.transform.WorldPointToLocalSpace(m_BrushCursorTransform.position));
-            float[] pointSimilarities = FindSplineSimilarities(m_BrushCursorTransform.LocalPointToWorldSpace(new Vector3 (0,0,0)), m_BrushCursorTransform.rotation);
-            for (int i = 0; i < m_strokeSimilarities.Length; i++)
-            {
-                m_strokeSimilarities[i] += pointSimilarities[i]; 
-            }
+            
             // m_BrushCursorTransform.LocalPointToWorldSpace(
         }
 
@@ -241,6 +237,24 @@ namespace IVLab.MinVR3
             if (m_strokeTransforms.Count > 0)
             {
                 // Spline spline = FindClosestSpline(m_strokeTransforms, out int splineIndex, out Spline drawnSpline);//, out float splineStart, out float splineEnd);
+                
+                
+                List<int> candidateList = m_spatialGrid.GetNearbySplines(m_strokeTransforms);
+                Debug.Log("NUMBER OF CANDIDATES " + candidateList.Count);
+                if (candidateList.Count == 0)
+                {
+                    candidateList.Add(0);
+                    Debug.Log("BACKUP CANDIDATE LIST");
+                }
+                // FIX THIS 
+                for (int i = 0; i < m_strokeTransforms.Count; i += Math.Max(1,(int)(m_strokeTransforms.Count/50)))
+                {
+                    float[] temp = FindSplineSimilarities(m_strokeTransforms[i], m_BrushCursorTransform.rotation, candidateList); // change rotation
+                    for (int j = 0; j < temp.Length; j++)
+                    {
+                        m_strokeSimilarities[j] += temp[j];
+                    }
+                }
                 int splineIndex = FindClosestSplineIndex();
                 Spline drawnSpline = new Spline();
                 foreach (Vector3 t in m_strokeTransforms)
@@ -393,35 +407,42 @@ namespace IVLab.MinVR3
             return index;
         }
 
-        public float[] FindSplineSimilarities(Vector3 currPos, Quaternion currQuat)
+        public float[] FindSplineSimilarities(Vector3 currPos, Quaternion currQuat, List<int> candidateList = null)
         {
             int splineCount = m_SplineContainer.Splines.Count;
             float[] similarities = new float[splineCount];
-            int testind = -1;
-            Vector3[] test = new Vector3[2];
+            // int testind = -1;
+            // Vector3[] test = new Vector3[2];
             // Vector3 currTan = (currQuat * Vector3.forward); // doesn't make sense due to rotation of hand does not mean the tangent of line.
             for (int i = 0; i < splineCount; i++)
             {
+                bool cont = false;
                 similarities[i] = float.MaxValue;
-
-                for (int j = 0; j < sampleCount; j++)
+                if (candidateList == null || candidateList.Contains(i))
                 {
-                    float alongSpline = j / (float)(sampleCount - 1);
-                    Vector3 splineTan = m_SplineContainer.transform.LocalPointToWorldSpace(m_SplineContainer.Splines[i].EvaluateTangent(alongSpline));
-                    Vector3 splinePos = m_SplineContainer.transform.LocalPointToWorldSpace(m_SplineContainer.Splines[i].EvaluatePosition(alongSpline));
-
-                    // float distance = Vector3.Distance(currPos, splinePos);
-                    float distance = (currPos - splinePos).sqrMagnitude;
-                    // float sim = w_dist * Mathf.Pow(distance, 2) + Mathf.Abs(w_dir * Vector3.Dot(currTan.normalized, splineTan.normalized)); 
-                    float sim = w_dist * distance;// + Mathf.Abs(w_dir * Vector3.Dot(currTan.normalized, splineTan.normalized)); 
-                    // TODO: FIX DIRECTION CALC
-
-                    if (sim < similarities[i])
+                    cont = true;
+                }
+                if (cont)
+                {
+                    for (int j = 0; j < sampleCount; j++)
                     {
-                        similarities[i] = sim;
-                        test[0] = currPos;
-                        test[1] = splinePos;
-                        testind = i;
+                        float alongSpline = j / (float)(sampleCount - 1);
+                        Vector3 splineTan = m_SplineContainer.transform.LocalPointToWorldSpace(m_SplineContainer.Splines[i].EvaluateTangent(alongSpline));
+                        Vector3 splinePos = m_SplineContainer.transform.LocalPointToWorldSpace(m_SplineContainer.Splines[i].EvaluatePosition(alongSpline));
+
+                        // float distance = Vector3.Distance(currPos, splinePos);
+                        float distance = (currPos - splinePos).sqrMagnitude;
+                        // float sim = w_dist * Mathf.Pow(distance, 2) + Mathf.Abs(w_dir * Vector3.Dot(currTan.normalized, splineTan.normalized)); 
+                        float sim = w_dist * distance;// + Mathf.Abs(w_dir * Vector3.Dot(currTan.normalized, splineTan.normalized)); 
+                        // TODO: FIX DIRECTION CALC
+
+                        if (sim < similarities[i])
+                        {
+                            similarities[i] = sim;
+                            // test[0] = currPos;
+                            // test[1] = splinePos;
+                            // testind = i;
+                        }
                     }
                 }
             }
