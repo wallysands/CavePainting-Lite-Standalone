@@ -51,33 +51,23 @@ public class SplineMaker : MonoBehaviour
                     if (integrationTime == 0 && rowNum != 1)
                     {
                         spline.Knots = knots;
-                        SplineRange all = new SplineRange(0, spline.Count); // is not working to smooth, revisit
+                        SplineRange all = new SplineRange(0, spline.Count); 
                         spline.SetTangentMode(all, TangentMode.AutoSmooth);
                         spline.SetAutoSmoothTension(all, m_SplineTension);
-
-                        // spline.Add(knots[0]);
-
-                        // for (int i = 1; i < knots.Count-1; i++)
-                        // {
-                            
-                        //     // var T = normalize(P[i+1] ​− P[i−1]​) * length(P - P[i-1]) / 3
-                        //     // var T = (knots[i+1].Position - knots[i-1].Position) / 3;
-                        //     var TIn = Vector3.Normalize(knots[i+1].Position - knots[i-1].Position) * Vector3.Distance(knots[i].Position,knots[i-1].Position) / 3;//normalize(P[i+1] ​− P[i−1]​) * length(P - P[i-1]) / 3;
-                        //     var TOut = Vector3.Normalize(knots[i+1].Position - knots[i-1].Position) * Vector3.Distance(knots[i].Position,knots[i-1].Position) / 3;//normalize(P[i+1] ​− P[i−1]​) * length(P - P[i+1]) / 3;
-                        //     spline.Add(new BezierKnot(knots[i].Position, TIn, TOut));
-                        // }
-                        // spline.Add(knots[^1]);
                         spline = m_splineContainer.AddSpline();
                         // spline.TangentMode(Continuous);
                         knots = new List<BezierKnot>();
                     }
-                    knots.Add(new BezierKnot(new float3(x, y, z)));
-                    // spline.Add(new BezierKnot(new float3(x, y, z)), TangentMode.AutoSmooth);
+                    // knots.Add(new BezierKnot(new float3(x, y, z)));
+                    spline.Add(new BezierKnot(new float3(x, y, z)), TangentMode.AutoSmooth);
                 }
                 else if (firstEmpty)
                 {
                     firstEmpty = false;
                     spline.Knots = knots;
+                    SplineRange all = new SplineRange(0, spline.Count); 
+                    spline.SetTangentMode(all, TangentMode.AutoSmooth);
+                    spline.SetAutoSmoothTension(all, m_SplineTension);
                     // SplineRange all = new SplineRange(0, spline.Count); // is not working to smooth, revisit
                     // spline.SetTangentMode(all, TangentMode.AutoSmooth);
                     // spline.SetAutoSmoothTension(all, m_SplineTension);
