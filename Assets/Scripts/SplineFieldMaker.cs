@@ -14,6 +14,8 @@ public class SplineFieldMaker : MonoBehaviour
     public SpatialGrid m_spatialGrid;
     public List<Dictionary<string, List<float>>> m_splineFeaturesList = new List<Dictionary<string, List<float>>>();
     private string[] featureHeaders;
+    public Dictionary<string,float> m_maxValues = new Dictionary<string, float>();
+    public Dictionary<string,float> m_minValues = new Dictionary<string, float>();
 
     // Start is called before the first frame update
     void Start()
@@ -62,8 +64,17 @@ public class SplineFieldMaker : MonoBehaviour
                         {
                             integrationTimeIndex = i;
                         }
+
+                        // Check if values are larger or smaller than max and min values respectively for the feature
+                        if (float.Parse(rowValues[i]) > m_maxValues[featureHeaders[i]])
+                        {
+                            m_maxValues[featureHeaders[i]] = float.Parse(rowValues[i]);
+                        }
+                        else if (float.Parse(rowValues[i]) < m_minValues[featureHeaders[i]])
+                        {
+                            m_minValues[featureHeaders[i]] = float.Parse(rowValues[i]);
+                        }
                     }
-                    Debug.Log(rowValues.Length);
                     
                     float integrationTime = float.Parse(rowValues[integrationTimeIndex]);
                     float x = float.Parse(rowValues[^3]);
@@ -101,6 +112,8 @@ public class SplineFieldMaker : MonoBehaviour
                 for (int i=0; i < featureHeaders.Length; i++)
                 {
                     featureHeaders[i] = featureHeaders[i].Trim("\"".ToCharArray());
+                    m_maxValues.Add(featureHeaders[i], float.MinValue);
+                    m_minValues.Add(featureHeaders[i], float.MaxValue);
                 }
                 m_splineFeaturesList.Add(new Dictionary<string, List<float>>());
             }
@@ -112,5 +125,4 @@ public class SplineFieldMaker : MonoBehaviour
         // m_splineContainer.GetComponent<MeshRenderer>().RecalculateBounds();
         m_splineContainer.GetComponent<SplineExtrude>().Rebuild();        
     }
-    
 }

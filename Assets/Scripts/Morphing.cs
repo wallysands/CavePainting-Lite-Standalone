@@ -30,32 +30,36 @@ public class Morphing : MonoBehaviour
         // If the tube would flip when morphing, reorganize vertices so it doesn't
         if (Vector3.Distance(m_startingVertices[0], m_endingVertices[0]) >= Vector3.Distance(m_startingVertices[^1], m_endingVertices[0])) {
             int faces = m_startingTube.GetNumFaces() + 1;
-            m_endingVertices = m_endingVertices.Reverse().ToArray();
-            m_endingNormals = m_endingNormals.Reverse().ToArray();
-            m_endingColors = m_endingColors.Reverse().ToArray();
 
-            Vector3[] tempVerts = new Vector3[m_endingVertices.Length];
-            Vector3[] tempNorms = new Vector3[m_endingNormals.Length];
-            Color[] tempCols = new Color[m_endingColors.Length];
+            m_startingVertices = m_startingVertices.Reverse().ToArray();
+            m_startingNormals = m_startingNormals.Reverse().ToArray();
+            m_startingColors = m_startingColors.Reverse().ToArray();
+
+
+            Vector3[] tempVerts = new Vector3[m_startingVertices.Length];
+            Vector3[] tempNorms = new Vector3[m_startingNormals.Length];
+            Color[] tempCols = new Color[m_startingColors.Length];
 
             Debug.Log("FLIPPING VERTS " + m_endingVertices.Length + " " + (int)(1.9));
-            for (int i = 0; i < m_endingVertices.Length; i++) {
+
+
+            for (int i = 0; i < m_startingVertices.Length; i++) {
                 //=FLOOR(A1/($C$3+1)) * ($C$3+1)  + MOD($C$3 - A1,($C$3 + 1))
-                tempVerts[i] = m_endingVertices[(int)(i / (faces)) * faces + ((faces - 1 - i) % faces)];
+                tempVerts[i] = m_startingVertices[(int)(i / (faces)) * faces + ((faces - 1 - i) % faces)];
             }
-            for (int i = 0; i < m_endingNormals.Length; i++) {
-                tempNorms[i] = m_endingNormals[(int)(i / (faces)) * faces + ((faces - 1 - i) % faces)];
+            for (int i = 0; i < m_startingNormals.Length; i++) {
+                tempNorms[i] = m_startingNormals[(int)(i / (faces)) * faces + ((faces - 1 - i) % faces)];
             }
-            for (int i = 0; i < m_endingColors.Length; i++) {
-                tempCols[i] = m_endingColors[(int)(i / (faces)) * faces + ((faces - 1 - i) % faces)];
+            for (int i = 0; i < m_startingColors.Length; i++) {
+                tempCols[i] = m_startingColors[(int)(i / (faces)) * faces + ((faces - 1 - i) % faces)];
             }
-            m_endingVertices = tempVerts;
-            m_endingNormals = tempNorms;
-            m_endingColors = tempCols;
-            Mesh endingMesh = m_endingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh;
-            endingMesh.vertices = m_endingVertices;
-            endingMesh.normals = m_endingNormals;
-            endingMesh.colors = m_endingColors;
+            m_startingVertices = tempVerts;
+            m_startingNormals = tempNorms;
+            m_startingColors = tempCols;
+            Mesh startingMesh = m_startingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh;
+            startingMesh.vertices = m_endingVertices;
+            startingMesh.normals = m_endingNormals;
+            startingMesh.colors = m_endingColors;
         }
 
         m_MorphingMesh = m_startingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh;
@@ -193,7 +197,7 @@ public class Morphing : MonoBehaviour
     private Color[] m_startingColors;
 
     private TubeGeometry m_endingTube;
-    private Vector3[] m_endingVertices;
+    public Vector3[] m_endingVertices;
     private Vector3[] m_endingNormals;
     private Color[] m_endingColors;
 

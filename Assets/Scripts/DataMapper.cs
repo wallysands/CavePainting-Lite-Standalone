@@ -17,24 +17,49 @@ public class DataMapper : MonoBehaviour
         // get all the TubeGeometries we want to edit
         TubeGeometry[] tubes = m_ArtworkRoot.GetComponentsInChildren<TubeGeometry>();
 
-        foreach (TubeGeometry t in tubes) {
+
+        foreach (TubeGeometry t in tubes)
+        {
             // get the data associated with the tube
-            StrokeData strokeData = t.gameObject.GetComponent<StrokeData>();
+            StrokeData strokeData = t.gameObject.GetComponentInChildren<StrokeData>();
+            if (strokeData != null)
+            {
+                Debug.Log("Got Stroke Data");
+                List<string> featureNames = strokeData.getFeatureNames();
 
+                if (m_SizeDataBindingVariableId != VariableId_None)
+                {
+                    Debug.Log("Size bound to " + featureNames[m_SizeDataBindingVariableId]);
+                    strokeData.AdjustTubeWidth(featureNames[m_SizeDataBindingVariableId]);
+                }
+                else
+                {
+                    // TODO: Reset to original width
+                }
 
-            // get the center position of each sample along the tube
-            List<Vector3> positions = t.GetSamplePositions();
+                // fill in the array of colors based on underlying data
+                Color[] colors = new Color[t.GetNumSamples()];
+                if (m_SizeDataBindingVariableId != VariableId_None)
+                {
+                    string colorFeatureName = featureNames[m_ColorDataBindingVariableId];
+                    Debug.Log("Color bound to " + featureNames[m_ColorDataBindingVariableId]);
 
-            // create an array of colors, one per sample
-            Color[] colors = new Color[positions.Count];
-
-            // fill in the array of colors based on underlying data
-            for (int i = 0; i < positions.Count; i++) {
-                // TODO: replace the next line with looking data value at positions[i] and converting it to a 0..1 range
-                float dataVal = (float)i / (float)(positions.Count - 1);
-                colors[i] = m_ColorMap.LookupColor(dataVal);
+                    for (int i = 0; i < t.GetNumSamples(); i++)
+                    {
+                        float dataVal = strokeData.GetDataValueAlongSpline(colorFeatureName, t.GetFracAlongLine(i));
+                        colors[i] = m_ColorMap.LookupColor(dataVal);
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < t.GetNumSamples(); i++)
+                    {
+                        // TODO: Reset to original color
+                        colors[i] = Color.white;
+                    }
+                }
+                t.SetColorsPerSample(colors);
             }
-            t.SetColorsPerSample(colors);
         }
     }
 

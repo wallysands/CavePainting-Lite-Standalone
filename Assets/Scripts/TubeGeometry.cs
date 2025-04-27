@@ -273,6 +273,15 @@ public class TubeGeometry : MonoBehaviour
         return m_SamplePositions;
     }
 
+    public float GetFracAlongLine(int sampleNum)
+    {
+        return m_ArcLengths[sampleNum] / m_ArcLengths[m_ArcLengths.Count - 1];
+    }
+
+    public List<Vector3> GetNormals()
+    {
+        return m_Normals;
+    }
 
     [Tooltip("Used to render the stroke's meshes.")]
     [SerializeField] private Material m_Material;
