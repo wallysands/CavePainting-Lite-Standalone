@@ -1,0 +1,12 @@
+<ColorMaps>
+<ColorMap name="yel_peach_br" space="RGB" interpolationspace="lab" creator="CCC-Tool">
+<Point x="0" o="1" r="0.6039911989390059" g="0.2245039878204096" b="0.18116251623528154" cms="true" isMoT="false"/>
+<Point x="0.2611923082082632" o="1" r="0.7935335338702899" g="0.5120350825744299" b="0.33766355143077936" cms="true" isMoT="false"/>
+<Point x="0.5" o="1" r="0.911180211629602" g="0.7444309703162184" b="0.46945511152703084" cms="true" isMoT="false"/>
+<Point x="0.7449187516239125" o="1" r="0.9760021555139174" g="0.9302053713302962" b="0.6429245211399776" cms="true" isMoT="false"/>
+<Point x="1" o="1" r="0.9986330332380996" g="1" b="0.8992762794519922" cms="true" isMoT="true"/>
+<NaN r="0" g="0" b="0"/>
+<Above r="0" g="0" b="0"/>
+<Below r="0" g="0" b="0"/>
+</ColorMap>
+</ColorMaps>

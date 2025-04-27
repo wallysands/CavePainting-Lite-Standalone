@@ -53,11 +53,12 @@ namespace IVLab.MinVR3
             Debug.Assert(m_PaintMaterial != null);
 
             m_NumStrokes = 0;
+            SetBrushColor(m_BrushColor);
 
-            // Debug.Log("Entering");
-            // m_NewArt = new List<Transform>();
+           // Debug.Log("Entering");
+           // m_NewArt = new List<Transform>();
 
-            m_SplineColoredContainer.transform.SetParent(m_ArtworkParentTransform, false);
+           m_SplineColoredContainer.transform.SetParent(m_ArtworkParentTransform, false);
         }
 
 
@@ -109,7 +110,7 @@ namespace IVLab.MinVR3
             MeshRenderer frontMeshRenderer = frontMeshObj.GetComponent<MeshRenderer>();
             frontMeshRenderer.sharedMaterial = m_PaintMaterial;       // set shared base material
             Material customizedMaterial = frontMeshRenderer.material; // clones base material
-            customizedMaterial.color = m_BrushColor;                  // customize the clone
+            //customizedMaterial.color = m_BrushColor;                  // customize the clone
             frontMeshRenderer.sharedMaterial = customizedMaterial;    // set shared to customized
             tube.SetMaterial(customizedMaterial);
             tube.SetNumFaces(8);

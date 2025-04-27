@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using IVLab.MinVR3;
+using System.Linq;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -23,6 +24,7 @@ public class TubeGeometry : MonoBehaviour
 
     public void Init(Vector3 brushPosRoom, Quaternion brushRotRoom, float brushWidthRoom, float brushHeightRoom, Color brushColor)
     {
+        m_SamplePositions = new List<Vector3>();
         m_Vertices = new List<Vector3>();
         m_Normals = new List<Vector3>();
         m_Colors = new List<Color>();
@@ -47,6 +49,8 @@ public class TubeGeometry : MonoBehaviour
 
     public void AddSample(Vector3 brushPosRoom, Quaternion brushRotRoom, float brushWidthRoom, float brushHeightRoom, Color brushColor)
     {
+        m_SamplePositions.Add(brushPosRoom);
+
         // convert these into the local space of the stroke, which has already been added to the artwork parent
         Vector3 brushPosLocal = this.transform.RoomPointToLocalSpace(brushPosRoom);
         Quaternion brushRotLocal = this.transform.RoomRotationToLocalSpace(brushRotRoom);
@@ -55,7 +59,7 @@ public class TubeGeometry : MonoBehaviour
         Vector3 brushRightScaledLocal = brushRightLocal * transform.RoomLengthToLocalSpace(0.5f * brushWidthRoom);
         Vector3 brushUpLocal = brushRotLocal * Vector3.up;
         Vector3 brushUpScaledLocal = brushUpLocal * transform.RoomLengthToLocalSpace(0.5f * brushHeightRoom);
-        
+
         // update arc length and calc v texcoord
         float deltaPos = 0.0f;
         if (m_ArcLengths.Count == 0) {
@@ -164,7 +168,7 @@ public class TubeGeometry : MonoBehaviour
         m_Mesh.SetNormals(m_Normals);
         m_Mesh.SetColors(m_Colors);
         m_Mesh.SetUVs(0, m_TexCoords);
-        m_Mesh.SetIndices(m_Indices, MeshTopology.Triangles, 0);        
+        m_Mesh.SetIndices(m_Indices, MeshTopology.Triangles, 0);
     }
 
 
@@ -181,6 +185,24 @@ public class TubeGeometry : MonoBehaviour
         // TODO: When the meshes are created we use the MarkDynamic() call to tell Unity they will change dynamically.
         // Not sure if there is a way to now tell Unity that we are done changing them dynamically.  If so, it
         // might provide some rendering performance benefits.  For now, leaving as is.
+    }
+
+
+    public void SetColorsPerSample(Color[] colorsPerSample)
+    {
+        Debug.Assert(colorsPerSample.Length == GetNumSamples());
+        Debug.Assert(m_Colors.Count == GetNumSamples() * (GetNumFaces() + 1));
+
+        int c = 0;
+        for (int s = 0; s < colorsPerSample.Length; s++)
+        {
+            for (int f = 0; f <= GetNumFaces(); f++)
+            {
+                m_Colors[c] = colorsPerSample[s];
+                c++;
+            }
+        }
+        m_Mesh.SetColors(m_Colors);
     }
 
     public void SetMaterial(Material mat)
@@ -241,6 +263,16 @@ public class TubeGeometry : MonoBehaviour
         return m_Vertices;
     }
 
+    public int GetNumSamples()
+    {
+        return m_SamplePositions.Count;
+    }
+
+    public List<Vector3> GetSamplePositions()
+    {
+        return m_SamplePositions;
+    }
+
 
     [Tooltip("Used to render the stroke's meshes.")]
     [SerializeField] private Material m_Material;
@@ -268,6 +300,7 @@ public class TubeGeometry : MonoBehaviour
     private List<Vector2> m_TexCoords;
     private List<int> m_Indices;
     private float m_LastV;
+    private List<Vector3> m_SamplePositions;
     private List<float> m_ArcLengths;
     private Vector3 m_LastBrushPosInRoom;
 

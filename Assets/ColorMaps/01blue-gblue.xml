@@ -1,0 +1,14 @@
+<ColorMaps>
+<ColorMap name="8_30T1" space="RGB" interpolationspace="lab" interpolationtype="linear" creator="CCC-Tool">
+<Point x="0" o="1" r="0.1089" g="0.11851165794491982" b="0.33" cms="1" isMoT="true"/>
+<Point x="0.16530340458317347" o="1" r="0.15999999999999998" g="0.2336666666666667" b="0.5" cms="1" isMoT="true"/>
+<Point x="0.32410726260443146" o="1" r="0.2898" g="0.4088700000000002" b="0.63" cms="1" isMoT="true"/>
+<Point x="0.5" o="1" r="0.44999999999999996" g="0.5797295620890708" b="0.75" cms="1" isMoT="true"/>
+<Point x="0.657283984335306" o="1" r="0.6192" g="0.7355866666666666" b="0.86" cms="1" isMoT="true"/>
+<Point x="0.8430741188830524" o="1" r="0.7812891750734015" g="0.8670419523938505" b="0.93" cms="1" isMoT="true"/>
+<Point x="1" o="1" r="0.95" g="1" b="1" cms="1" isMoT="true"/>
+<NaN r="0.25" g="0" b="0"/>
+<Above r="0" g="0" b="0"/>
+<Below r="0" g="0" b="0"/>
+</ColorMap>
+</ColorMaps>

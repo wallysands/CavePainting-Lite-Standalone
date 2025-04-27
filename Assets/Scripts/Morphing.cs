@@ -12,6 +12,8 @@ public class Morphing : MonoBehaviour
     {
         m_startingTube = startingTube;
         m_startingVertices = m_startingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.vertices;
+        m_startingNormals = m_startingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.normals;
+        m_startingColors = m_startingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.colors;
 
         // m_endingSpline = endingSpline;
         m_brushColor = c;
@@ -21,19 +23,39 @@ public class Morphing : MonoBehaviour
         // convert end spline into a tube
         m_endingTube = CreateTube(endingSpline, m_startingTube);
         m_endingVertices = m_endingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.vertices;
+        m_endingNormals = m_endingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.normals;
+        m_endingColors = m_endingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.colors;
+
 
         // If the tube would flip when morphing, reorganize vertices so it doesn't
         if (Vector3.Distance(m_startingVertices[0], m_endingVertices[0]) >= Vector3.Distance(m_startingVertices[^1], m_endingVertices[0])) {
             int faces = m_startingTube.GetNumFaces() + 1;
             m_endingVertices = m_endingVertices.Reverse().ToArray();
-            Vector3[] temp = new Vector3[m_endingVertices.Length];
+            m_endingNormals = m_endingNormals.Reverse().ToArray();
+            m_endingColors = m_endingColors.Reverse().ToArray();
+
+            Vector3[] tempVerts = new Vector3[m_endingVertices.Length];
+            Vector3[] tempNorms = new Vector3[m_endingNormals.Length];
+            Color[] tempCols = new Color[m_endingColors.Length];
+
             Debug.Log("FLIPPING VERTS " + m_endingVertices.Length + " " + (int)(1.9));
             for (int i = 0; i < m_endingVertices.Length; i++) {
                 //=FLOOR(A1/($C$3+1)) * ($C$3+1)  + MOD($C$3 - A1,($C$3 + 1))
-                temp[i] = m_endingVertices[(int)(i / (faces)) * faces + ((faces - 1 - i) % faces)];
+                tempVerts[i] = m_endingVertices[(int)(i / (faces)) * faces + ((faces - 1 - i) % faces)];
             }
-            m_endingVertices = temp;
-            m_endingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.vertices = m_endingVertices;
+            for (int i = 0; i < m_endingNormals.Length; i++) {
+                tempNorms[i] = m_endingNormals[(int)(i / (faces)) * faces + ((faces - 1 - i) % faces)];
+            }
+            for (int i = 0; i < m_endingColors.Length; i++) {
+                tempCols[i] = m_endingColors[(int)(i / (faces)) * faces + ((faces - 1 - i) % faces)];
+            }
+            m_endingVertices = tempVerts;
+            m_endingNormals = tempNorms;
+            m_endingColors = tempCols;
+            Mesh endingMesh = m_endingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh;
+            endingMesh.vertices = m_endingVertices;
+            endingMesh.normals = m_endingNormals;
+            endingMesh.colors = m_endingColors;
         }
 
         m_MorphingMesh = m_startingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh;
@@ -105,15 +127,21 @@ public class Morphing : MonoBehaviour
             if (alpha >= 1) // || Time.deltaTime / m_animationSpeed > 0.1)
             {
                 m_MorphingMesh.SetVertices(m_endingVertices);
+                m_MorphingMesh.SetNormals(m_endingNormals);
+                m_MorphingMesh.SetColors(m_endingColors);
                 MeshCollider mc = m_startingTube.gameObject.AddComponent<MeshCollider>();
-                mc.sharedMesh = m_MorphingMesh;
                 m_MorphComplete = true;
             } else {
 
                 Vector3[] movingVerts = m_MorphingMesh.vertices;
+                Vector3[] movingNorms = m_MorphingMesh.normals;
+                Color[] movingCols = m_MorphingMesh.colors;
 
                 for (int i = 0; i < movingVerts.Length; i++) {
-                    movingVerts[i] = Vector3.Lerp(m_startingVertices[i], m_endingVertices[i], alpha); // this works only if the start and end tubes have same number of verts and faces                 
+                    // this works only if the start and end tubes have same number of verts and faces                 
+                    movingVerts[i] = Vector3.Lerp(m_startingVertices[i], m_endingVertices[i], alpha);
+                    movingNorms[i] = Vector3.Lerp(m_startingNormals[i], m_endingNormals[i], alpha);
+                    movingCols[i] = Color.Lerp(m_startingColors[i], m_endingColors[i], alpha);
                 }
 
                 // Debug.Log("Num starting Verts " + m_startingVertices.Length + " Num ending verts " +endingVerts.Length);
@@ -140,7 +168,8 @@ public class Morphing : MonoBehaviour
                 // Debug.Log("MOVED TO " + movingVerts[0]+ " AT TIME " + alpha);
                 // m_startingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.Clear();
                 m_MorphingMesh.SetVertices(movingVerts);
-                // mesh.SetNormals
+                m_MorphingMesh.SetNormals(movingNorms);
+                m_MorphingMesh.SetColors(movingCols);
 
                 // m_Mesh.SetNormals(m_Normals);
                 // m_Mesh.SetColors(m_Colors);
@@ -150,21 +179,27 @@ public class Morphing : MonoBehaviour
         }
     }
 
-    private TubeGeometry m_startingTube;
     // private Spline m_endingSpline;
-    private float m_animationSpeed = 3.0f;
-    private Color m_brushColor;
+    [SerializeField] private float m_animationSpeed = 3.0f;
+    [SerializeField] private int segmentsAlongSpline = 100;
+
     private Transform m_ArtworkParentTransform;
-    private TubeGeometry m_endingTube;
-    private int segmentsAlongSpline = 100;
-    private Vector3[] m_startingVertices;
-    private Vector3[] m_endingVertices;
+    private GameObject m_CurrentStrokeObj;
     private Mesh m_MorphingMesh;
 
-    private float alpha = 0;
-    private GameObject m_CurrentStrokeObj;
-    private bool m_MorphComplete;
+    private TubeGeometry m_startingTube;
+    private Vector3[] m_startingVertices;
+    private Vector3[] m_startingNormals;
+    private Color[] m_startingColors;
 
+    private TubeGeometry m_endingTube;
+    private Vector3[] m_endingVertices;
+    private Vector3[] m_endingNormals;
+    private Color[] m_endingColors;
+
+    private float alpha = 0;
+    private bool m_MorphComplete;
+    private Color m_brushColor;
     private Vector3 m_LastUp = new Vector3(0,1,0);
     private Vector3 m_brushScale;
 }
