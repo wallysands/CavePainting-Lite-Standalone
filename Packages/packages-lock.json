@@ -234,11 +234,10 @@
       "url": "https://packages.unity.com"
     },
     "edu.umn.cs.ivlab.minvr3": {
-      "version": "https://github.com/ivlab/MinVR3-UnityPackage.git",
+      "version": "file:MinVR3-UnityPackage",
       "depth": 0,
-      "source": "git",
-      "dependencies": {},
-      "hash": "b85039a42be269842aefc169a997b7255ed01bce"
+      "source": "embedded",
+      "dependencies": {}
     },
     "com.unity.modules.ai": {
       "version": "1.0.0",
