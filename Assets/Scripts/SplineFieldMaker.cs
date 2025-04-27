@@ -9,7 +9,7 @@ using System.Linq;
 public class SplineFieldMaker : MonoBehaviour
 {
     [SerializeField] private Transform m_ArtworkParentTransform;
-    [SerializeField] public TextAsset testAssetData;
+    [SerializeField] public TextAsset textAssetData;
     public SplineContainer m_splineContainer;
     public SpatialGrid m_spatialGrid;
     public List<Dictionary<string, List<float>>> m_splineFeaturesList = new List<Dictionary<string, List<float>>>();
@@ -18,7 +18,7 @@ public class SplineFieldMaker : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        ReadCSV(testAssetData);
+        ReadCSV(textAssetData);
         m_splineContainer.transform.SetParent(m_ArtworkParentTransform, false);
         m_spatialGrid.Init();
     }

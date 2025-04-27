@@ -66,20 +66,11 @@ public class Morphing : MonoBehaviour
 
             d = Quaternion.LookRotation(look, up);
 
-            //d = Quaternion.LookRotation(m_CurrentStrokeObj.transform.TransformDirection(spline.EvaluateTangent(t)));
-            // tube.AddSample(m_CurrentStrokeObj.transform.TransformPoint(spline.EvaluatePosition(t)), d, 0.05f, 0.05f, m_brushColor);
             tube.AddSample(m_CurrentStrokeObj.transform.TransformPoint(spline.EvaluatePosition(t)), d, m_brushScale.x, m_brushScale.y, m_brushColor);
-
-            // TO CALCULATE THE DIRECTION (Z) do Quaternion * Vector3.Forward
-            // coroutine
         }
 
         tube.Complete(m_CurrentStrokeObj.transform.TransformPoint(spline.EvaluatePosition(1)), d, 0f, 0f, m_brushColor);
         tube.GetComponent<MeshRenderer>().enabled = false;
-        // Debug.Log("NUM VERTICES END " + tube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.vertices.Length);
-        // Debug.Log("Num Faces End " + tube.GetNumFaces());
-        // Debug.Log("NUM SEGMENTS END " + tube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.vertices.Length / tube.GetNumFaces()); 
-
 
         return tube;
     }
@@ -142,7 +133,10 @@ public class Morphing : MonoBehaviour
             // startingVerts[0] = Vector3.Lerp(startingVerts[0], endingVerts[0], Time.deltaTime/m_animationSpeed);
             // Debug.Log("MOVED TO " + movingVerts[0]+ " AT TIME " + alpha);
             // m_startingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.Clear();
-            m_startingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.SetVertices(movingVerts);
+            mesh = m_startingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh
+            mesh.SetVertices(movingVerts);
+            mesh.SetNormals
+
             // m_Mesh.SetNormals(m_Normals);
             // m_Mesh.SetColors(m_Colors);
             // m_Mesh.SetUVs(0, m_TexCoords);

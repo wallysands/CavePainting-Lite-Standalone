@@ -16,6 +16,7 @@ public class StrokeData : MonoBehaviour
         {
             m_strokeData.Add(key, strokeData[key].GetRange(math.min(startKnotIndex,endKnotIndex), math.abs(endKnotIndex - startKnotIndex)));
         }
+        Debug.Log(m_strokeData["Temp"][0]);
 
     }
     public List<string> getFeatureNames()

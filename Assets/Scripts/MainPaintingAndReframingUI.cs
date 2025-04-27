@@ -200,10 +200,12 @@ namespace IVLab.MinVR3
                 }
 
                 // Attach stroke info to tube
-                GameObject go2 = new GameObject("StrokeData " + m_NumStrokes, typeof(StrokeData));
-                StrokeData strokedata = go2.GetComponent<StrokeData>();
+                GameObject go1 = new GameObject("StrokeData " + m_NumStrokes, typeof(StrokeData));
+                StrokeData strokedata = go1.GetComponent<StrokeData>();
                 strokedata.transform.SetParent(tube.transform);
                 strokedata.Init(m_SplineContainer.GetComponent<SplineFieldMaker>().m_splineFeaturesList[splineIndex], startKnotIndex, endKnotIndex);
+
+                MeshCollider mc = m_CurrentStrokeObj.AddComponent(typeof(MeshCollider)) as MeshCollider;
             }
 
             m_NumStrokes++;
