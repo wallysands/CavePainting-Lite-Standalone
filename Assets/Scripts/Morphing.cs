@@ -11,6 +11,8 @@ public class Morphing : MonoBehaviour
     public void Init(TubeGeometry startingTube, Spline endingSpline, Transform parentTransform, Color c, Vector3 brushScale, float animationSpeed = 3)
     {
         m_startingTube = startingTube;
+        m_startingVertices = m_startingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.vertices;
+
         // m_endingSpline = endingSpline;
         m_brushColor = c;
         m_ArtworkParentTransform = parentTransform;
@@ -18,7 +20,24 @@ public class Morphing : MonoBehaviour
 
         // convert end spline into a tube
         m_endingTube = CreateTube(endingSpline, m_startingTube);
-        m_startingVertices = m_startingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.vertices;
+        m_endingVertices = m_endingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.vertices;
+
+        // If the tube would flip when morphing, reorganize vertices so it doesn't
+        if (Vector3.Distance(m_startingVertices[0], m_endingVertices[0]) >= Vector3.Distance(m_startingVertices[^1], m_endingVertices[0])) {
+            int faces = m_startingTube.GetNumFaces() + 1;
+            m_endingVertices = m_endingVertices.Reverse().ToArray();
+            Vector3[] temp = new Vector3[m_endingVertices.Length];
+            Debug.Log("FLIPPING VERTS " + m_endingVertices.Length + " " + (int)(1.9));
+            for (int i = 0; i < m_endingVertices.Length; i++) {
+                //=FLOOR(A1/($C$3+1)) * ($C$3+1)  + MOD($C$3 - A1,($C$3 + 1))
+                temp[i] = m_endingVertices[(int)(i / (faces)) * faces + ((faces - 1 - i) % faces)];
+            }
+            m_endingVertices = temp;
+            m_endingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.vertices = m_endingVertices;
+        }
+
+        m_MorphingMesh = m_startingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh;
+        m_MorphComplete = false;
 
         // m_Mesh.SetVertices(m_Vertices);
         // m_Mesh.SetNormals(m_Normals);
@@ -78,69 +97,56 @@ public class Morphing : MonoBehaviour
     void Update()
     {
 
-        if (m_startingTube != null)
-        {
+        if ((m_startingTube != null) && (!m_MorphComplete)) {
             // lerp between vertex points on the start tube and end tube
-            Vector3[] movingVerts = m_startingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.vertices;
-            Vector3[] endingVerts = m_endingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.vertices;
-            // If the tube would flip when morphing, reorganize vertices so it doesn't
-            if (Vector3.Distance(movingVerts[0], endingVerts[0]) >= Vector3.Distance(movingVerts[^1], endingVerts[0]))
+            alpha += Time.deltaTime / m_animationSpeed;
+
+            // if morph is complete, lock in the ending vertices and return
+            if (alpha >= 1) // || Time.deltaTime / m_animationSpeed > 0.1)
             {
-                int faces = m_startingTube.GetNumFaces() + 1;
-                endingVerts = endingVerts.Reverse().ToArray();
-                Vector3[] temp = new Vector3[endingVerts.Length];
-                Debug.Log("FLIPPING VERTS " + endingVerts.Length + " " + (int)(1.9));
-                for (int i = 0; i < endingVerts.Length; i++)
-                {
-                    //=FLOOR(A1/($C$3+1)) * ($C$3+1)  + MOD($C$3 - A1,($C$3 + 1))
-                    temp[i] = endingVerts[(int)(i/(faces)) * faces + ((faces - 1 - i) % faces)];
+                m_MorphingMesh.SetVertices(m_endingVertices);
+                MeshCollider mc = m_startingTube.gameObject.AddComponent<MeshCollider>();
+                mc.sharedMesh = m_MorphingMesh;
+                m_MorphComplete = true;
+            } else {
+
+                Vector3[] movingVerts = m_MorphingMesh.vertices;
+
+                for (int i = 0; i < movingVerts.Length; i++) {
+                    movingVerts[i] = Vector3.Lerp(m_startingVertices[i], m_endingVertices[i], alpha); // this works only if the start and end tubes have same number of verts and faces                 
                 }
-                endingVerts = temp;
-                m_endingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.vertices = endingVerts;
+
+                // Debug.Log("Num starting Verts " + m_startingVertices.Length + " Num ending verts " +endingVerts.Length);
+                // int truncatedEnd =  endingVerts.Length - endingVerts.Length % m_startingTube.GetNumFaces();
+                // float ratio = (float)(truncatedEnd) / (float)(movingVerts.Length);
+                // Debug.Log("RATIO " + ratio);
+                // Debug.Log("DOES RATIO WORK? " +(int)(ratio * movingVerts.Length));
+
+                // for (int i = 0; i < movingVerts.Length-m_startingTube.GetNumFaces()+1; i+= m_startingTube.GetNumFaces())
+                // {
+                //     int endingVertIndex = (int)(ratio * i) - (int)(ratio * i) % m_startingTube.GetNumFaces();
+                //     for (int j = 0; j < m_startingTube.GetNumFaces(); j++)
+                //     {
+                //         if (endingVertIndex + j >= endingVerts.Length)
+                //         {
+                //             Debug.Log("ENDINDEX " + endingVertIndex);
+                //             Debug.Log("J " + j);
+                //         }
+                //         movingVerts[i + j] = Vector3.Lerp(m_startingVertices[i + j], endingVerts[endingVertIndex + j], alpha); // this works only if the start and end tubes have same number of verts and faces
+                //     }
+                // }
+
+                // startingVerts[0] = Vector3.Lerp(startingVerts[0], endingVerts[0], Time.deltaTime/m_animationSpeed);
+                // Debug.Log("MOVED TO " + movingVerts[0]+ " AT TIME " + alpha);
+                // m_startingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.Clear();
+                m_MorphingMesh.SetVertices(movingVerts);
+                // mesh.SetNormals
+
+                // m_Mesh.SetNormals(m_Normals);
+                // m_Mesh.SetColors(m_Colors);
+                // m_Mesh.SetUVs(0, m_TexCoords);
+                // m_Mesh.SetIndices(m_Indices, MeshTopology.Triangles, 0);  
             }
-            if (movingVerts == endingVerts || alpha > 1)// || Time.deltaTime / m_animationSpeed > 0.1)
-            {
-                return;
-            }
-            alpha += Time.deltaTime/m_animationSpeed;
-
-            
-            for (int i = 0; i < movingVerts.Length; i++)
-            {
-                movingVerts[i] = Vector3.Lerp(m_startingVertices[i], endingVerts[i], alpha); // this works only if the start and end tubes have same number of verts and faces                 
-            }
-
-            // Debug.Log("Num starting Verts " + m_startingVertices.Length + " Num ending verts " +endingVerts.Length);
-            // int truncatedEnd =  endingVerts.Length - endingVerts.Length % m_startingTube.GetNumFaces();
-            // float ratio = (float)(truncatedEnd) / (float)(movingVerts.Length);
-            // Debug.Log("RATIO " + ratio);
-            // Debug.Log("DOES RATIO WORK? " +(int)(ratio * movingVerts.Length));
-
-            // for (int i = 0; i < movingVerts.Length-m_startingTube.GetNumFaces()+1; i+= m_startingTube.GetNumFaces())
-            // {
-            //     int endingVertIndex = (int)(ratio * i) - (int)(ratio * i) % m_startingTube.GetNumFaces();
-            //     for (int j = 0; j < m_startingTube.GetNumFaces(); j++)
-            //     {
-            //         if (endingVertIndex + j >= endingVerts.Length)
-            //         {
-            //             Debug.Log("ENDINDEX " + endingVertIndex);
-            //             Debug.Log("J " + j);
-            //         }
-            //         movingVerts[i + j] = Vector3.Lerp(m_startingVertices[i + j], endingVerts[endingVertIndex + j], alpha); // this works only if the start and end tubes have same number of verts and faces
-            //     }
-            // }
-
-            // startingVerts[0] = Vector3.Lerp(startingVerts[0], endingVerts[0], Time.deltaTime/m_animationSpeed);
-            // Debug.Log("MOVED TO " + movingVerts[0]+ " AT TIME " + alpha);
-            // m_startingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.Clear();
-            Mesh mesh = m_startingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh;
-            mesh.SetVertices(movingVerts);
-            // mesh.SetNormals
-
-            // m_Mesh.SetNormals(m_Normals);
-            // m_Mesh.SetColors(m_Colors);
-            // m_Mesh.SetUVs(0, m_TexCoords);
-            // m_Mesh.SetIndices(m_Indices, MeshTopology.Triangles, 0);  
         }
     }
 
@@ -152,8 +158,12 @@ public class Morphing : MonoBehaviour
     private TubeGeometry m_endingTube;
     private int segmentsAlongSpline = 100;
     private Vector3[] m_startingVertices;
+    private Vector3[] m_endingVertices;
+    private Mesh m_MorphingMesh;
+
     private float alpha = 0;
     private GameObject m_CurrentStrokeObj;
+    private bool m_MorphComplete;
 
     private Vector3 m_LastUp = new Vector3(0,1,0);
     private Vector3 m_brushScale;
