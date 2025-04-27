@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Splines;
 using System.Linq;
+using Unity.Mathematics;
 
 namespace IVLab.MinVR3
 {
@@ -125,81 +126,6 @@ namespace IVLab.MinVR3
 
         public void Painting_OnUpdate()
         {
-            // // find the points at the left edge and right edge of the brush bristles.  In the raw CavePainting brush
-            // // model, these vertices are at (-0.5, 0, 0) and (0.5, 0, 0)
-            // Vector3 leftBrushPtWorld = m_BrushCursorTransform.LocalPointToWorldSpace(new Vector3(-0.5f, 0, 0));
-            // Vector3 rightBrushPtWorld = m_BrushCursorTransform.LocalPointToWorldSpace(new Vector3(0.5f, 0, 0));
-
-            // // convert these into the local space of the stroke, which has already been added to the artwork parent
-            // Vector3 leftBrushPtArtwork = m_CurrentStrokeObj.transform.WorldPointToLocalSpace(leftBrushPtWorld);
-            // Vector3 rightBrushPtArtwork = m_CurrentStrokeObj.transform.WorldPointToLocalSpace(rightBrushPtWorld);
-
-
-            // // ADD TO THE FRONT MESH
-
-            // // push two new vertices for these points to back of the vertex list
-            // m_CurrentStrokeFrontVertices.Add(leftBrushPtArtwork);
-            // m_CurrentStrokeFrontVertices.Add(rightBrushPtArtwork);
-
-            // // add two triangles to the stroke mesh to connect the last left/right points to the current ones
-            // if (m_CurrentStrokeFrontVertices.Count >= 4) {
-            //     // construct two traingles with the last four vertices added
-            //     int v0 = m_CurrentStrokeFrontVertices.Count - 4; // last left
-            //     int v1 = m_CurrentStrokeFrontVertices.Count - 3; // last right
-            //     int v2 = m_CurrentStrokeFrontVertices.Count - 2; // cur left
-            //     int v3 = m_CurrentStrokeFrontVertices.Count - 1; // cur right
-
-            //     // tri #1 (note: Unity uses clockwise ordering)
-            //     m_CurrentStrokeFrontIndices.Add(v0);
-            //     m_CurrentStrokeFrontIndices.Add(v2);
-            //     m_CurrentStrokeFrontIndices.Add(v3);
-
-            //     // tri #2
-            //     m_CurrentStrokeFrontIndices.Add(v0);
-            //     m_CurrentStrokeFrontIndices.Add(v3);
-            //     m_CurrentStrokeFrontIndices.Add(v1);
-
-            //     // update the mesh
-            //     m_CurrentStrokeFrontMesh.Clear();
-            //     m_CurrentStrokeFrontMesh.SetVertices(m_CurrentStrokeFrontVertices);
-            //     m_CurrentStrokeFrontMesh.SetIndices(m_CurrentStrokeFrontIndices, MeshTopology.Triangles, 0);
-            //     m_CurrentStrokeFrontMesh.RecalculateNormals();
-            // }
-
-
-            // // ADD TO THE BACK MESH (only difference is the ordering of the vertices in the two triangles)
-
-            // // push two new vertices for these points to back of the vertex list
-            // m_CurrentStrokeBackVertices.Add(leftBrushPtArtwork);
-            // m_CurrentStrokeBackVertices.Add(rightBrushPtArtwork);
-
-            // // add two triangles to the stroke mesh to connect the last left/right points to the current ones
-            // if (m_CurrentStrokeBackVertices.Count >= 4) {
-
-            //     // construct two traingles with the last four vertices added
-            //     int v0 = m_CurrentStrokeBackVertices.Count - 4; // last left
-            //     int v1 = m_CurrentStrokeBackVertices.Count - 3; // last right
-            //     int v2 = m_CurrentStrokeBackVertices.Count - 2; // cur left
-            //     int v3 = m_CurrentStrokeBackVertices.Count - 1; // cur right
-
-            //     // tri #1 (note: Unity uses clockwise ordering)
-            //     m_CurrentStrokeBackIndices.Add(v0);
-            //     m_CurrentStrokeBackIndices.Add(v3);
-            //     m_CurrentStrokeBackIndices.Add(v2);
-
-            //     // tri #2
-            //     m_CurrentStrokeBackIndices.Add(v0);
-            //     m_CurrentStrokeBackIndices.Add(v1);
-            //     m_CurrentStrokeBackIndices.Add(v3);
-
-            //     // update the mesh
-            //     m_CurrentStrokeBackMesh.Clear();
-            //     m_CurrentStrokeBackMesh.SetVertices(m_CurrentStrokeBackVertices);
-            //     m_CurrentStrokeBackMesh.SetIndices(m_CurrentStrokeBackIndices, MeshTopology.Triangles, 0);
-            //     m_CurrentStrokeBackMesh.RecalculateNormals();
-            // }
-
-
             // Tube Geomtry start
             Vector3 brushScale = m_BrushCursorTransform.localScale;
 
@@ -207,40 +133,46 @@ namespace IVLab.MinVR3
             Debug.Assert(tube != null);
             tube.AddSample(m_BrushCursorTransform.position, m_BrushCursorTransform.rotation, brushScale.x, brushScale.y, m_BrushColor);
             m_strokeTransforms.Add(m_CurrentStrokeObj.transform.WorldPointToLocalSpace(m_BrushCursorTransform.position));
-            float[] pointSimilarities = FindSplineSimilarities(m_BrushCursorTransform.LocalPointToWorldSpace(new Vector3 (0,0,0)), m_BrushCursorTransform.rotation);
+            
+            List<int> candidateList = m_spatialGrid.GetNearbySplines(m_strokeTransforms);
+            Debug.Log("NUMBER OF CANDIDATES " + candidateList.Count);
+            if (candidateList.Count == 0)
+            {
+                candidateList = null;
+                Debug.Log("BACKUP CANDIDATE LIST");
+            }
+
+            float[] pointSimilarities = FindSplineSimilarities(m_BrushCursorTransform.LocalPointToWorldSpace(new Vector3 (0,0,0)), m_BrushCursorTransform.rotation, candidateList);
             for (int i = 0; i < m_strokeSimilarities.Length; i++)
             {
                 m_strokeSimilarities[i] += pointSimilarities[i]; 
             }
-            // m_BrushCursorTransform.LocalPointToWorldSpace(
         }
 
 
         public void Painting_OnExit()
         {
-            m_NumStrokes++;
-            // List<Vector3> currCenters = new List<Vector3>();
-
-            // // Get center of the line.
-            // for (int i = 0; i < m_CurrentStrokeBackVertices.Count; i+=2)
-            // {
-            //     if (m_CurrentStrokeBackVertices.Count > i+1)
-            //     {
-            //         Vector3 v0 = m_CurrentStrokeBackVertices[i];
-            //         Vector3 v1 = m_CurrentStrokeBackVertices[i+1];
-            //         currCenters.Add((v0 + v1) / 2);
-                    
-            //         // Debug.Log("VERTICES LEFT LAST: " + v0 + " RIGHT LAST: " + v1);
-            //     }
-            // }
-            // currCenters = currCenters.Distinct().ToList();
-
-            // Debug.Log("CENTERS LAST: " + currCenters[^1] + " FIRST: " + currCenters[0]);
-
-            
             if (m_strokeTransforms.Count > 0)
             {
                 // Spline spline = FindClosestSpline(m_strokeTransforms, out int splineIndex, out Spline drawnSpline);//, out float splineStart, out float splineEnd);
+                
+                
+                // List<int> candidateList = m_spatialGrid.GetNearbySplines(m_strokeTransforms);
+                // Debug.Log("NUMBER OF CANDIDATES " + candidateList.Count);
+                // if (candidateList.Count == 0)
+                // {
+                //     candidateList.Add(0);
+                //     Debug.Log("BACKUP CANDIDATE LIST");
+                // }
+                // // FIX THIS 
+                // for (int i = 0; i < m_strokeTransforms.Count; i += Math.Max(1,(int)(m_strokeTransforms.Count/50)))
+                // {
+                //     float[] temp = FindSplineSimilarities(m_strokeTransforms[i], m_BrushCursorTransform.rotation, candidateList); // change rotation
+                //     for (int j = 0; j < temp.Length; j++)
+                //     {
+                //         m_strokeSimilarities[j] += temp[j];
+                //     }
+                // }
                 int splineIndex = FindClosestSplineIndex();
                 Spline drawnSpline = new Spline();
                 foreach (Vector3 t in m_strokeTransforms)
@@ -251,23 +183,30 @@ namespace IVLab.MinVR3
                 Spline spline = m_SplineContainer.Splines[splineIndex];
                 
                 // Debug.Log("INDEX CHECK " +splineIndex);
-                Spline nearestSplineSegment = FindSplineSegmentUsingLength(spline, splineIndex, drawnSpline);
+                Spline nearestSplineSegment = FindSplineSegmentUsingLength(spline, splineIndex, drawnSpline, out int startKnotIndex, out int endKnotIndex);
 
                 GameObject go = new GameObject("Morph " + m_NumStrokes, typeof(Morphing));
                 Morphing morph = go.GetComponent<Morphing>();
+                morph.transform.SetParent(m_ArtworkParentTransform.transform, false);
                 morph.Init(m_CurrentStrokeObj.GetComponent<TubeGeometry>(), nearestSplineSegment, m_ArtworkParentTransform, m_BrushColor, m_BrushCursorTransform.localScale);
+                
+                // Tube Geometry
+                TubeGeometry tube = m_CurrentStrokeObj.GetComponent<TubeGeometry>();
+                Debug.Assert(tube != null);
+                tube.Complete(m_BrushCursorTransform.position, m_BrushCursorTransform.rotation, 0f, 0f, m_BrushColor);
+                for (int i = 0; i<m_strokeSimilarities.Length; i++)
+                {
+                    m_strokeSimilarities[i] = 0;
+                }
+
+                // Attach stroke info to tube
+                GameObject go2 = new GameObject("StrokeData " + m_NumStrokes, typeof(StrokeData));
+                StrokeData strokedata = go2.GetComponent<StrokeData>();
+                strokedata.transform.SetParent(tube.transform);
+                strokedata.Init(m_SplineContainer.GetComponent<SplineFieldMaker>().m_splineFeaturesList[splineIndex], startKnotIndex, endKnotIndex);
             }
 
-
-            // Tube Geometry
-
-            TubeGeometry tube = m_CurrentStrokeObj.GetComponent<TubeGeometry>();
-            Debug.Assert(tube != null);
-            tube.Complete(m_BrushCursorTransform.position, m_BrushCursorTransform.rotation, 0f, 0f, m_BrushColor);
-            for (int i = 0; i<m_strokeSimilarities.Length; i++)
-            {
-                m_strokeSimilarities[i] = 0;
-            }
+            m_NumStrokes++;
         }
 
         public Spline FindClosestSpline(List<Vector3> centers, out int bestIndex, out Spline drawnSpline)//, out float splineStartIndex, out float splineEndIndex)
@@ -389,39 +328,56 @@ namespace IVLab.MinVR3
                     value = m_strokeSimilarities[i];
                 }
             }
+            if (index == -1)
+            {
+                Debug.Log("Spline index still -1");
+                foreach (var e in m_strokeSimilarities)
+                {
+                    if (e != Mathf.Infinity)
+                    {
+                        Debug.Log("Similarities: " + e);
+                    }
+                }
+            }
             // Debug.Log("FINDING SPLINE INDEX: " + index);
             return index;
         }
 
-        public float[] FindSplineSimilarities(Vector3 currPos, Quaternion currQuat)
+        public float[] FindSplineSimilarities(Vector3 currPos, Quaternion currQuat, List<int> candidateList = null)
         {
             int splineCount = m_SplineContainer.Splines.Count;
             float[] similarities = new float[splineCount];
-            int testind = -1;
-            Vector3[] test = new Vector3[2];
-            // Vector3 currTan = (currQuat * Vector3.forward); // doesn't make sense due to rotation of hand does not mean the tangent of line.
+            // int testind = -1;
+            // Vector3[] test = new Vector3[2];
+            Vector3 currTan = (currQuat * Vector3.forward); 
             for (int i = 0; i < splineCount; i++)
             {
+                bool cont = false;
                 similarities[i] = float.MaxValue;
-
-                for (int j = 0; j < sampleCount; j++)
+                if (candidateList == null || candidateList.Contains(i))
                 {
-                    float alongSpline = j / (float)(sampleCount - 1);
-                    Vector3 splineTan = m_SplineContainer.transform.LocalPointToWorldSpace(m_SplineContainer.Splines[i].EvaluateTangent(alongSpline));
-                    Vector3 splinePos = m_SplineContainer.transform.LocalPointToWorldSpace(m_SplineContainer.Splines[i].EvaluatePosition(alongSpline));
-
-                    // float distance = Vector3.Distance(currPos, splinePos);
-                    float distance = (currPos - splinePos).sqrMagnitude;
-                    // float sim = w_dist * Mathf.Pow(distance, 2) + Mathf.Abs(w_dir * Vector3.Dot(currTan.normalized, splineTan.normalized)); 
-                    float sim = w_dist * distance;// + Mathf.Abs(w_dir * Vector3.Dot(currTan.normalized, splineTan.normalized)); 
-                    // TODO: FIX DIRECTION CALC
-
-                    if (sim < similarities[i])
+                    cont = true;
+                }
+                if (cont)
+                {
+                    for (int j = 0; j < sampleCount; j++)
                     {
-                        similarities[i] = sim;
-                        test[0] = currPos;
-                        test[1] = splinePos;
-                        testind = i;
+                        float alongSpline = j / (float)(sampleCount - 1);
+                        Vector3 splineTan = m_SplineContainer.transform.LocalPointToWorldSpace(m_SplineContainer.Splines[i].EvaluateTangent(alongSpline));
+                        Vector3 splinePos = m_SplineContainer.transform.LocalPointToWorldSpace(m_SplineContainer.Splines[i].EvaluatePosition(alongSpline));
+
+                        // float distance = Vector3.Distance(currPos, splinePos);
+                        float distance = (currPos - splinePos).sqrMagnitude;
+                        // float sim = w_dist * Mathf.Pow(distance, 2) + Mathf.Abs(w_dir * Vector3.Dot(currTan.normalized, splineTan.normalized)); 
+                        float sim = w_dist * distance + Mathf.Abs(w_dir * Vector3.Dot(currTan.normalized, splineTan.normalized)); 
+
+                        if (sim < similarities[i])
+                        {
+                            similarities[i] = sim;
+                            // test[0] = currPos;
+                            // test[1] = splinePos;
+                            // testind = i;
+                        }
                     }
                 }
             }
@@ -500,10 +456,10 @@ namespace IVLab.MinVR3
             return newSpline;
         }
 
-        public Spline FindSplineSegmentUsingLength(Spline spline, int splineIndex, Spline drawnSpline)//Vector3 splineStart, Vector3 splineEnd)
+        public Spline FindSplineSegmentUsingLength(Spline spline, int splineIndex, Spline drawnSpline, out int startIndex, out int endIndex)//Vector3 splineStart, Vector3 splineEnd)
         {
-            int startIndex = -1;
-            int endIndex = -1;
+            startIndex = -1;
+            endIndex = -1;
             float bestStartDist = float.MaxValue;
             float bestEndDist = float.MaxValue;
             Spline newSpline = new Spline();
@@ -542,7 +498,7 @@ namespace IVLab.MinVR3
                             bestSimilarity = totalSimilarity;
                             startIndex = i;
                             endIndex = j;
-                            Debug.Log("TARGET LENGTH: " + targetLength + " DRAWN LENGTH: " + drawnSpline.GetLength());
+                            // Debug.Log("TARGET LENGTH: " + targetLength + " DRAWN LENGTH: " + drawnSpline.GetLength());
                         }
                         
                     }
@@ -618,6 +574,20 @@ namespace IVLab.MinVR3
             m_LastBrushPos = brushPosWorld;
         }
 
+        public void ToggleField()
+        {
+            if (m_visibleSplines)
+            {
+                m_SplineContainer.GetComponent<MeshRenderer>().enabled = false;
+            }
+            else
+            {
+                m_SplineContainer.GetComponent<MeshRenderer>().enabled = true;
+            }
+            m_visibleSplines = !m_visibleSplines;
+
+        }
+
         // public void StartListening()
         // {
         //     VREngine.Instance.eventManager.AddEventListener(this);
@@ -684,11 +654,16 @@ namespace IVLab.MinVR3
         private List<Vector3> m_strokeTransforms;
 
         // Tube Geometry
-        [SerializeField] private TubeGeometry m_TubeGeometry;
+        private TubeGeometry m_TubeGeometry;
         private float w_dir = 1;
         private float w_dist = 10;
         private int sampleCount = 50;
         private float[] m_strokeSimilarities;
+        public SpatialGrid m_spatialGrid;
+        private bool m_visibleSplines = true;
+        public Artwork m_artwork;
+
+
         
         // [Header("VR Events")]
         // [SerializeField] private VREventPrototypeVector3 m_BrushPosEvent;
