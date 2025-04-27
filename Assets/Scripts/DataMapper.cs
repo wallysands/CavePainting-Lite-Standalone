@@ -18,6 +18,10 @@ public class DataMapper : MonoBehaviour
         TubeGeometry[] tubes = m_ArtworkRoot.GetComponentsInChildren<TubeGeometry>();
 
         foreach (TubeGeometry t in tubes) {
+            // get the data associated with the tube
+            StrokeData strokeData = t.gameObject.GetComponent<StrokeData>();
+
+
             // get the center position of each sample along the tube
             List<Vector3> positions = t.GetSamplePositions();
 

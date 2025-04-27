@@ -27,7 +27,7 @@ public class TubeGeometry : MonoBehaviour
         m_SamplePositions = new List<Vector3>();
         m_Vertices = new List<Vector3>();
         m_Normals = new List<Vector3>();
-        m_Colors = new List<Color>();
+        m_VertexColors = new List<Color>();
         m_TexCoords = new List<Vector2>();
         m_Indices = new List<int>();
         m_ArcLengths = new List<float>();
@@ -94,7 +94,7 @@ public class TubeGeometry : MonoBehaviour
             m_Normals.Add((brushRightLocal * Mathf.Cos(a) + brushUpLocal * Mathf.Sin(a)).normalized);
 
             // store colors
-            m_Colors.Add(brushColor);
+            m_VertexColors.Add(brushColor);
 
             // store tex coords
             float u;
@@ -166,7 +166,7 @@ public class TubeGeometry : MonoBehaviour
         m_Mesh.Clear();
         m_Mesh.SetVertices(m_Vertices);
         m_Mesh.SetNormals(m_Normals);
-        m_Mesh.SetColors(m_Colors);
+        m_Mesh.SetColors(m_VertexColors);
         m_Mesh.SetUVs(0, m_TexCoords);
         m_Mesh.SetIndices(m_Indices, MeshTopology.Triangles, 0);
     }
@@ -191,18 +191,18 @@ public class TubeGeometry : MonoBehaviour
     public void SetColorsPerSample(Color[] colorsPerSample)
     {
         Debug.Assert(colorsPerSample.Length == GetNumSamples());
-        Debug.Assert(m_Colors.Count == GetNumSamples() * (GetNumFaces() + 1));
+        Debug.Assert(m_VertexColors.Count == GetNumSamples() * (GetNumFaces() + 1));
 
         int c = 0;
         for (int s = 0; s < colorsPerSample.Length; s++)
         {
             for (int f = 0; f <= GetNumFaces(); f++)
             {
-                m_Colors[c] = colorsPerSample[s];
+                m_VertexColors[c] = colorsPerSample[s];
                 c++;
             }
         }
-        m_Mesh.SetColors(m_Colors);
+        m_Mesh.SetColors(m_VertexColors);
     }
 
     public void SetMaterial(Material mat)
@@ -291,17 +291,18 @@ public class TubeGeometry : MonoBehaviour
     [Tooltip("Does the texture repeat as a series of stamps or stretch all the way along the stroke")]
     [SerializeField] private TextureMode m_TexMode;
 
-    // Created dynamically
+    // Current state of the geometry
     private MeshRenderer m_MeshRend;
     private Mesh m_Mesh;
     private List<Vector3> m_Vertices;
     private List<Vector3> m_Normals;
-    private List<Color> m_Colors;
+    private List<Color> m_VertexColors;
     private List<Vector2> m_TexCoords;
     private List<int> m_Indices;
-    private float m_LastV;
+
+    // tmp vars while drawing
     private List<Vector3> m_SamplePositions;
     private List<float> m_ArcLengths;
+    private float m_LastV;
     private Vector3 m_LastBrushPosInRoom;
-
 }
