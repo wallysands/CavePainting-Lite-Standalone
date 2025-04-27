@@ -205,7 +205,8 @@ namespace IVLab.MinVR3
                 strokedata.transform.SetParent(tube.transform);
                 strokedata.Init(m_SplineContainer.GetComponent<SplineFieldMaker>().m_splineFeaturesList[splineIndex], startKnotIndex, endKnotIndex);
 
-                MeshCollider mc = m_CurrentStrokeObj.AddComponent(typeof(MeshCollider)) as MeshCollider;
+                // Wait to add this until the morph is complete.
+                //MeshCollider mc = m_CurrentStrokeObj.AddComponent(typeof(MeshCollider)) as MeshCollider;
             }
 
             m_NumStrokes++;
