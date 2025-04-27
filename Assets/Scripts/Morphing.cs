@@ -133,9 +133,9 @@ public class Morphing : MonoBehaviour
             // startingVerts[0] = Vector3.Lerp(startingVerts[0], endingVerts[0], Time.deltaTime/m_animationSpeed);
             // Debug.Log("MOVED TO " + movingVerts[0]+ " AT TIME " + alpha);
             // m_startingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.Clear();
-            mesh = m_startingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh
+            Mesh mesh = m_startingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh;
             mesh.SetVertices(movingVerts);
-            mesh.SetNormals
+            // mesh.SetNormals
 
             // m_Mesh.SetNormals(m_Normals);
             // m_Mesh.SetColors(m_Colors);
