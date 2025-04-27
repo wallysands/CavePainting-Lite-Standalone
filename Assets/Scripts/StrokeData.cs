@@ -32,7 +32,7 @@ public class StrokeData : MonoBehaviour
         {
             m_strokeData.Add(key, strokeData[key].GetRange(math.min(startKnotIndex,endKnotIndex), math.abs(endKnotIndex - startKnotIndex)));
             // Normalize these values
-            for (int i = 0; i < m_strokeData[key].Count(); i++) m_strokeData[key][i] = (m_strokeData[key][i] - m_minValues[key]) / (m_maxValues[key] - m_minValues[key]);
+            for (int i = 0; i < m_strokeData[key].Count(); i++) m_strokeData[key][i] = 2 * (m_strokeData[key][i] - m_minValues[key]) / (m_maxValues[key] - m_minValues[key]) - 1;
         }
         if (m_strokeData.ContainsKey("V:0"))
         {
@@ -90,7 +90,7 @@ public class StrokeData : MonoBehaviour
             for (int j = 0; j < numFaces + 1; j++)
             {
                 Vector3 thisVert = center + m_morphStroke.GetNormals()[i+j] * dataScaleValue * Mathf.Cos(a) + m_morphStroke.GetNormals()[i+j] * dataScaleValue * Mathf.Sin(a);
-                if (j == 0) Debug.Log(thisVert + " " + dataScaleValue + " " + featToScaleOn[dataIndex]);
+                if (i == 0 && j == 0) Debug.Log(thisVert + " " + dataScaleValue + " " + featToScaleOn[dataIndex] +  " " + m_strokeData["V:0"][dataIndex] + " " + m_strokeData["V:1"][dataIndex] + " " + m_strokeData["V:2"][dataIndex]);
                 strokeVertices[i + j] = thisVert;
             }
         }
