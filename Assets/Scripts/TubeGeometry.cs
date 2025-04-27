@@ -241,6 +241,10 @@ public class TubeGeometry : MonoBehaviour
         return m_Vertices;
     }
 
+    public List<Vector3> GetNormals()
+    {
+        return m_Normals;
+    }
 
     [Tooltip("Used to render the stroke's meshes.")]
     [SerializeField] private Material m_Material;

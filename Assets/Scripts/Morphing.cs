@@ -25,15 +25,15 @@ public class Morphing : MonoBehaviour
         // If the tube would flip when morphing, reorganize vertices so it doesn't
         if (Vector3.Distance(m_startingVertices[0], m_endingVertices[0]) >= Vector3.Distance(m_startingVertices[^1], m_endingVertices[0])) {
             int faces = m_startingTube.GetNumFaces() + 1;
-            m_endingVertices = m_endingVertices.Reverse().ToArray();
-            Vector3[] temp = new Vector3[m_endingVertices.Length];
-            Debug.Log("FLIPPING VERTS " + m_endingVertices.Length + " " + (int)(1.9));
-            for (int i = 0; i < m_endingVertices.Length; i++) {
+            m_startingVertices = m_startingVertices.Reverse().ToArray();
+            Vector3[] temp = new Vector3[m_startingVertices.Length];
+            Debug.Log("FLIPPING VERTS " + m_startingVertices.Length + " " + (int)(1.9));
+            for (int i = 0; i < m_startingVertices.Length; i++) {
                 //=FLOOR(A1/($C$3+1)) * ($C$3+1)  + MOD($C$3 - A1,($C$3 + 1))
-                temp[i] = m_endingVertices[(int)(i / (faces)) * faces + ((faces - 1 - i) % faces)];
+                temp[i] = m_startingVertices[(int)(i / (faces)) * faces + ((faces - 1 - i) % faces)];
             }
-            m_endingVertices = temp;
-            m_endingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.vertices = m_endingVertices;
+            m_startingVertices = temp;
+            m_startingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.vertices = m_startingVertices;
         }
 
         m_MorphingMesh = m_startingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh;
@@ -158,7 +158,7 @@ public class Morphing : MonoBehaviour
     private TubeGeometry m_endingTube;
     private int segmentsAlongSpline = 100;
     private Vector3[] m_startingVertices;
-    private Vector3[] m_endingVertices;
+    public Vector3[] m_endingVertices;
     private Mesh m_MorphingMesh;
 
     private float alpha = 0;

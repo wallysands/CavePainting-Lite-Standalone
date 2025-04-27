@@ -135,7 +135,7 @@ namespace IVLab.MinVR3
             m_strokeTransforms.Add(m_CurrentStrokeObj.transform.WorldPointToLocalSpace(m_BrushCursorTransform.position));
             
             List<int> candidateList = m_spatialGrid.GetNearbySplines(m_strokeTransforms);
-            Debug.Log("NUMBER OF CANDIDATES " + candidateList.Count);
+            // Debug.Log("NUMBER OF CANDIDATES " + candidateList.Count);
             if (candidateList.Count == 0)
             {
                 candidateList = null;
@@ -203,7 +203,8 @@ namespace IVLab.MinVR3
                 GameObject go1 = new GameObject("StrokeData " + m_NumStrokes, typeof(StrokeData));
                 StrokeData strokedata = go1.GetComponent<StrokeData>();
                 strokedata.transform.SetParent(tube.transform);
-                strokedata.Init(m_SplineContainer.GetComponent<SplineFieldMaker>().m_splineFeaturesList[splineIndex], startKnotIndex, endKnotIndex);
+                SplineFieldMaker sfm = m_SplineContainer.GetComponent<SplineFieldMaker>();
+                strokedata.Init(sfm.m_splineFeaturesList[splineIndex], m_CurrentStrokeObj, startKnotIndex, endKnotIndex, sfm.m_maxValues, sfm.m_minValues, morph);
 
                 // Wait to add this until the morph is complete.
                 //MeshCollider mc = m_CurrentStrokeObj.AddComponent(typeof(MeshCollider)) as MeshCollider;
