@@ -17,14 +17,14 @@ public class MenuFunctions : MonoBehaviour
 
     public void Start()
     {
-        // // build preset menu based on colormaps
-        // presetMenu.menuItems.Clear();
-        // for (int i = 0; i < colorMapPresets.Count; i++)
-        // {
-        //     Debug.Log(colorMapPresets[i].name);
-        //     presetMenu.menuItems.Add(colorMapPresets[i].name);
-        // }
-        // presetMenu.RebuildMenu();
+        // build preset menu based on colormaps
+        presetMenu.menuItems.Clear();
+        for (int i = 0; i < colorMapPresets.Count; i++)
+        {
+            Debug.Log(colorMapPresets[i].name);
+            presetMenu.menuItems.Add(colorMapPresets[i].name);
+        }
+        presetMenu.RebuildMenu();
 
         // build data menus
         string[] varNames = splineFieldMaker.featureHeaders;
