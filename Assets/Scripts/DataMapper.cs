@@ -21,7 +21,7 @@ public class DataMapper : MonoBehaviour
         foreach (TubeGeometry t in tubes)
         {
             // get the data associated with the tube
-            StrokeData strokeData = t.gameObject.GetComponentInChildren<StrokeData>();
+            StrokeData strokeData = t.transform.GetComponentInChildren<StrokeData>();
             if (strokeData != null)
             {
                 Debug.Log("Got Stroke Data");
@@ -30,16 +30,18 @@ public class DataMapper : MonoBehaviour
                 if (m_SizeDataBindingVariableId != VariableId_None)
                 {
                     Debug.Log("Size bound to " + featureNames[m_SizeDataBindingVariableId]);
-                    strokeData.AdjustTubeWidth(featureNames[m_SizeDataBindingVariableId]);
+                    strokeData.AdjustTubeWidth(featureNames[m_SizeDataBindingVariableId], m_MinSize, m_MaxSize);
                 }
                 else
                 {
                     // TODO: Reset to original width
+                    strokeData.ResetWidths();
                 }
 
                 // fill in the array of colors based on underlying data
+
                 Color[] colors = new Color[t.GetNumSamples()];
-                if (m_SizeDataBindingVariableId != VariableId_None)
+                if (m_ColorDataBindingVariableId != VariableId_None)
                 {
                     string colorFeatureName = featureNames[m_ColorDataBindingVariableId];
                     Debug.Log("Color bound to " + featureNames[m_ColorDataBindingVariableId]);
@@ -49,16 +51,21 @@ public class DataMapper : MonoBehaviour
                         float dataVal = strokeData.GetDataValueAlongSpline(colorFeatureName, t.GetFracAlongLine(i));
                         colors[i] = m_ColorMap.LookupColor(dataVal);
                     }
+                    strokeData.SetColors(colors);
                 }
                 else
                 {
-                    for (int i = 0; i < t.GetNumSamples(); i++)
-                    {
-                        // TODO: Reset to original color
-                        colors[i] = Color.white;
-                    }
+                    // for (int i = 0; i < t.GetNumSamples(); i++)
+                    // {
+                    //     // TODO: Reset to original color
+                    //     colors[i] = Color.white;
+                        
+                    // }
+                    strokeData.ResetColors();
                 }
-                t.SetColorsPerSample(colors);
+                
+                // t.SetColorsPerSample(colors);
+                strokeData.TriggerMorph();
             }
         }
     }
@@ -119,8 +126,8 @@ public class DataMapper : MonoBehaviour
     [SerializeField] private ColorMap m_ColorMap;
 
     [SerializeField] private int m_SizeDataBindingVariableId;
-    [SerializeField] private float m_MinSize;
-    [SerializeField] private float m_MaxSize;
+    [SerializeField] private float m_MinSize = -1;
+    [SerializeField] private float m_MaxSize = -1;
 
     [SerializeField] private GameObject m_ArtworkRoot;
 }

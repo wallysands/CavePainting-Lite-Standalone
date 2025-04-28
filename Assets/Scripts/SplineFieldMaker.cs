@@ -48,34 +48,7 @@ public class SplineFieldMaker : MonoBehaviour
                 // Test that values exist in the row
                 if (rowValues[0].Length > 0)
                 {
-                    for (int i = 0; i < rowValues.Length; i++)
-                    {
-                        if (m_splineFeaturesList[splineIndex].ContainsKey(featureHeaders[i]))
-                        {
-                            m_splineFeaturesList[splineIndex][featureHeaders[i]].Add(float.Parse(rowValues[i]));
-                        }
-                        else
-                        {
-                            List<float> tmp = new List<float>();
-                            tmp.Add(float.Parse(rowValues[i]));
-                            m_splineFeaturesList[splineIndex].Add(featureHeaders[i], tmp);
-                        }
-                        if (String.Equals(featureHeaders[i],"IntegrationTime"))
-                        {
-                            integrationTimeIndex = i;
-                        }
-
-                        // Check if values are larger or smaller than max and min values respectively for the feature
-                        if (float.Parse(rowValues[i]) > m_maxValues[featureHeaders[i]])
-                        {
-                            m_maxValues[featureHeaders[i]] = float.Parse(rowValues[i]);
-                        }
-                        else if (float.Parse(rowValues[i]) < m_minValues[featureHeaders[i]])
-                        {
-                            m_minValues[featureHeaders[i]] = float.Parse(rowValues[i]);
-                        }
-                    }
-                    
+                    // Build Splines
                     float integrationTime = float.Parse(rowValues[integrationTimeIndex]);
                     float x = float.Parse(rowValues[^3]);
                     float y = float.Parse(rowValues[^2]);
@@ -96,6 +69,55 @@ public class SplineFieldMaker : MonoBehaviour
                     }
                     knots.Add(new BezierKnot(new float3(x, y, z)));
                     // spline.Add(new BezierKnot(new float3(x, y, z)), TangentMode.AutoSmooth);
+
+                    // Data Processing
+                    for (int i = 0; i < rowValues.Length; i++)
+                    {
+                        if (m_splineFeaturesList[splineIndex].ContainsKey(featureHeaders[i]))
+                        {
+                            m_splineFeaturesList[splineIndex][featureHeaders[i]].Add(float.Parse(rowValues[i]));
+                        }
+                        else
+                        {
+                            List<float> tmp = new List<float>();
+                            tmp.Add(float.Parse(rowValues[i]));
+                            m_splineFeaturesList[splineIndex].Add(featureHeaders[i], tmp);
+                        }
+                        
+
+                        // Check if values are larger or smaller than max and min values respectively for the feature
+                        if (float.Parse(rowValues[i]) > m_maxValues[featureHeaders[i]])
+                        {
+                            m_maxValues[featureHeaders[i]] = float.Parse(rowValues[i]);
+                        }
+                        else if (float.Parse(rowValues[i]) < m_minValues[featureHeaders[i]])
+                        {
+                            m_minValues[featureHeaders[i]] = float.Parse(rowValues[i]);
+                        }
+                    }
+
+                    // Manual added features
+                    float speed = (new Vector3(x, y, z)).sqrMagnitude;
+                    if (m_splineFeaturesList[splineIndex].ContainsKey("Speed"))
+                    {
+                        m_splineFeaturesList[splineIndex]["Speed"].Add(speed);
+                    }
+                    else
+                    {
+                        List<float> tmp = new List<float>();
+                        tmp.Add(speed);
+                        m_splineFeaturesList[splineIndex].Add("Speed", tmp);
+                    }
+                    // Check if values are larger or smaller than max and min values respectively for the feature
+                    if ((speed) > m_maxValues["Speed"])
+                    {
+                        m_maxValues["Speed"] = speed;
+                    }
+                    else if (speed < m_minValues["Speed"])
+                    {
+                        m_minValues["Speed"] = speed;
+                    }
+
                 }
                 else if (firstEmpty)
                 {
@@ -114,7 +136,16 @@ public class SplineFieldMaker : MonoBehaviour
                     featureHeaders[i] = featureHeaders[i].Trim("\"".ToCharArray());
                     m_maxValues.Add(featureHeaders[i], float.MinValue);
                     m_minValues.Add(featureHeaders[i], float.MaxValue);
+                    if (String.Equals(featureHeaders[i],"IntegrationTime"))
+                    {
+                        integrationTimeIndex = i;
+                    }
                 }
+
+                // Manually Added Variables
+                m_maxValues.Add("Speed", float.MinValue);
+                m_minValues.Add("Speed", float.MaxValue);
+
                 m_splineFeaturesList.Add(new Dictionary<string, List<float>>());
             }
 

@@ -275,7 +275,11 @@ public class TubeGeometry : MonoBehaviour
 
     public float GetFracAlongLine(int sampleNum)
     {
-        return m_ArcLengths[sampleNum] / m_ArcLengths[m_ArcLengths.Count - 1];
+        if (m_ArcLengths[m_ArcLengths.Count - 1] != 0)
+        {
+            return m_ArcLengths[sampleNum] / m_ArcLengths[m_ArcLengths.Count - 1];
+        }
+        return 0.0f;
     }
 
     public List<Vector3> GetNormals()

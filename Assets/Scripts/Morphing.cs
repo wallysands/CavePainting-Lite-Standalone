@@ -25,6 +25,8 @@ public class Morphing : MonoBehaviour
         m_endingVertices = m_endingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.vertices;
         m_endingNormals = m_endingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.normals;
         m_endingColors = m_endingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.colors;
+        m_originalVertices = m_endingVertices;
+        m_originalBrushColor = m_endingColors;
 
 
         // If the tube would flip when morphing, reorganize vertices so it doesn't
@@ -120,12 +122,44 @@ public class Morphing : MonoBehaviour
         return tube;
     }
 
+    public void NewMorph()
+    {
+        if (alpha >= 1)
+        {
+            Debug.Log("STARTING MORPH AGAIN?");
+            Destroy(m_startingTube.gameObject.GetComponent<MeshCollider>());
+            Mesh startingMesh = m_startingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh;
+            startingMesh.vertices = m_MorphingMesh.vertices;
+            startingMesh.normals = m_MorphingMesh.normals;
+            startingMesh.colors = m_MorphingMesh.colors;
+            m_startingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh = startingMesh;
+            alpha = 0;
+            m_MorphComplete = false;
+        }
+    }
+
+    public void SetEndingColors(Color[] colorsPerSample)
+    {
+        m_endingColors = m_endingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.colors;
+    }
+
+    public void ResetColors()
+    {
+        m_endingColors = m_originalBrushColor;
+    }
+
+    public void ResetWidths()
+    {
+        m_endingVertices = m_originalVertices;
+    }
+
     void Update()
     {
 
         if ((m_startingTube != null) && (!m_MorphComplete)) {
             // lerp between vertex points on the start tube and end tube
             alpha += Time.deltaTime / m_animationSpeed;
+            // Debug.Log("TIME PASSED: " + Time.deltaTime);
 
             // if morph is complete, lock in the ending vertices and return
             if (alpha >= 1) // || Time.deltaTime / m_animationSpeed > 0.1)
@@ -135,6 +169,9 @@ public class Morphing : MonoBehaviour
                 m_MorphingMesh.SetColors(m_endingColors);
                 MeshCollider mc = m_startingTube.gameObject.AddComponent<MeshCollider>();
                 m_MorphComplete = true;
+                m_startingVertices = m_endingVertices;
+                m_startingNormals = m_endingNormals;
+                m_startingColors = m_endingColors;
             } else {
 
                 Vector3[] movingVerts = m_MorphingMesh.vertices;
@@ -185,7 +222,7 @@ public class Morphing : MonoBehaviour
 
     // private Spline m_endingSpline;
     [SerializeField] private float m_animationSpeed = 3.0f;
-    [SerializeField] private int segmentsAlongSpline = 100;
+    [SerializeField] private int segmentsAlongSpline = 50;
 
     private Transform m_ArtworkParentTransform;
     private GameObject m_CurrentStrokeObj;
@@ -206,4 +243,8 @@ public class Morphing : MonoBehaviour
     private Color m_brushColor;
     private Vector3 m_LastUp = new Vector3(0,1,0);
     private Vector3 m_brushScale;
+
+    // Original Values
+    private Color[] m_originalBrushColor;
+    private Vector3[] m_originalVertices;
 }
