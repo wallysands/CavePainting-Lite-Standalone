@@ -26,17 +26,6 @@ namespace IVLab.MinVR3
             SetBrushColor(new Color(c[0], c[1], c[2], c[3]));
         }
 
-        // void OnEnable()
-        // {
-        //     StartListening();
-        // }
-
-        // void OnDisable()
-        // {
-        //     StopListening();
-        // }
-        
-
         private void Reset()
         {
             m_ArtworkParentTransform = null;
@@ -55,10 +44,7 @@ namespace IVLab.MinVR3
             m_NumStrokes = 0;
             SetBrushColor(m_BrushColor);
 
-           // Debug.Log("Entering");
-           // m_NewArt = new List<Transform>();
-
-           m_SplineColoredContainer.transform.SetParent(m_ArtworkParentTransform, false);
+            m_SplineColoredContainer.transform.SetParent(m_ArtworkParentTransform, false);
         }
 
 
@@ -66,37 +52,6 @@ namespace IVLab.MinVR3
 
         public void Painting_OnEnter()
         {
-            // // create a new GameObject to hold the new paint stroke
-            // m_CurrentStrokeObj = new GameObject("Stroke " + m_NumStrokes);
-            // m_CurrentStrokeObj.transform.SetParent(m_ArtworkParentTransform, false);
-
-            // // normals can get weird when using two-sided rendering, and Unity's standard shaders do not support it.
-            // // but we would like to see both sides of the ribbons we paint.  so, the solution is to create two meshes
-            // // one to draw the "front" side of the ribbon and one to draw the "back" side of the ribbon.  the only
-            // // change between front and back is swapping the vertex ordering of each triangle.
-            // GameObject frontMeshObj = new GameObject("FrontMesh", typeof(MeshFilter), typeof(MeshRenderer));
-            // frontMeshObj.transform.SetParent(m_CurrentStrokeObj.transform, false);
-            // MeshRenderer frontMeshRenderer = frontMeshObj.GetComponent<MeshRenderer>();
-            // frontMeshRenderer.sharedMaterial = m_PaintMaterial;       // set shared base material
-            // Material customizedMaterial = frontMeshRenderer.material; // clones base material
-            // customizedMaterial.color = m_BrushColor;                  // customize the clone
-            // frontMeshRenderer.sharedMaterial = customizedMaterial;    // set shared to customized
-
-            // m_CurrentStrokeFrontMesh = frontMeshRenderer.GetComponent<MeshFilter>().mesh;
-            // m_CurrentStrokeFrontMesh.MarkDynamic();
-            // m_CurrentStrokeFrontVertices = new List<Vector3>();
-            // m_CurrentStrokeFrontIndices = new List<int>();
-
-            // GameObject backMeshObj = new GameObject("BackMesh", typeof(MeshFilter), typeof(MeshRenderer));
-            // backMeshObj.transform.SetParent(m_CurrentStrokeObj.transform, false);
-            // MeshRenderer backMeshRenderer = backMeshObj.GetComponent<MeshRenderer>();
-            // backMeshRenderer.sharedMaterial = customizedMaterial;
-            // m_CurrentStrokeBackMesh = backMeshRenderer.GetComponent<MeshFilter>().mesh;
-            // m_CurrentStrokeBackMesh.MarkDynamic();
-            // m_CurrentStrokeBackVertices = new List<Vector3>();
-            // m_CurrentStrokeBackIndices = new List<int>();
-
-
             // Tube Geometry Start
             m_CurrentStrokeObj = new GameObject("Tube Stroke " + m_NumStrokes, typeof(TubeGeometry));
             m_CurrentStrokeObj.transform.SetParent(m_ArtworkParentTransform.transform, false);
@@ -157,25 +112,6 @@ namespace IVLab.MinVR3
         {
             if (m_strokeTransforms.Count > 0 && m_brushType != BrushType.NoDataBinding)
             {
-                // Spline spline = FindClosestSpline(m_strokeTransforms, out int splineIndex, out Spline drawnSpline);//, out float splineStart, out float splineEnd);
-                
-                
-                // List<int> candidateList = m_spatialGrid.GetNearbySplines(m_strokeTransforms);
-                // Debug.Log("NUMBER OF CANDIDATES " + candidateList.Count);
-                // if (candidateList.Count == 0)
-                // {
-                //     candidateList.Add(0);
-                //     Debug.Log("BACKUP CANDIDATE LIST");
-                // }
-                // // FIX THIS 
-                // for (int i = 0; i < m_strokeTransforms.Count; i += Math.Max(1,(int)(m_strokeTransforms.Count/50)))
-                // {
-                //     float[] temp = FindSplineSimilarities(m_strokeTransforms[i], m_BrushCursorTransform.rotation, candidateList); // change rotation
-                //     for (int j = 0; j < temp.Length; j++)
-                //     {
-                //         m_strokeSimilarities[j] += temp[j];
-                //     }
-                // }
                 int splineIndex = FindClosestSplineIndex();
                 Spline drawnSpline = new Spline();
                 foreach (Vector3 t in m_strokeTransforms)
@@ -252,18 +188,7 @@ namespace IVLab.MinVR3
                     Vector3 p1 = drawnSpline.EvaluatePosition(t1);
                     Vector3 d1 = drawnSpline.EvaluateTangent(t1);
 
-                    ///// COMPARISON FROM EACH POINT TO ANYWHERE ALONG THE SPLINE, needs d2 calculation still
-                    // var distance = SplineUtility.GetNearestPoint(spline, p1, out var p2, out float _);
-                    
-                    // float similarity = w_dist * Mathf.Pow(distance, 2) + Mathf.Abs(w_dir * Vector3.Dot(d1, d2)); 
-
-                    // splineSimilarity += similarity;
-                    ///// END COMPARISON
-
-
                     ///// COMPARISON FROM EACH POINT TO ANY POINT ON THE SPLINE
-
-
                     float bestSimilarityPoint = float.MaxValue;
                     // Loop through points evenly spaced along the current spline comparison
                     for (int j = 0; j < sampleCount; j++)
@@ -294,22 +219,6 @@ namespace IVLab.MinVR3
 
                     splineSimilarity += bestSimilarityPoint;
                     ///// END COMPARISON
-
-
-                    ///// COMPARISON AT EACH SECTION TO SECTION
-                    // Vector3 p2 = spline.EvaluatePosition(t1);
-                    // Vector3 d2 = spline.EvaluateTangent(t1);
-
-                    // float distance = Vector3.Distance(p1, p2);
-
-
-
-                    // float similarity = w_dist * Mathf.Pow(distance, 2) + Mathf.Abs(w_dir * Vector3.Dot(d1, d2)); 
-
-                    // splineSimilarity += similarity;
-                    ///// END COMPARISON
-
-
                 }
                 if (splineSimilarity < bestSimilaritySpline)
                 {
@@ -354,8 +263,6 @@ namespace IVLab.MinVR3
         {
             int splineCount = m_SplineContainer.Splines.Count;
             float[] similarities = new float[splineCount];
-            // int testind = -1;
-            // Vector3[] test = new Vector3[2];
             Vector3 currTan = (currQuat * Vector3.forward); 
             for (int i = 0; i < splineCount; i++)
             {
@@ -381,15 +288,10 @@ namespace IVLab.MinVR3
                         if (sim < similarities[i])
                         {
                             similarities[i] = sim;
-                            // test[0] = currPos;
-                            // test[1] = splinePos;
-                            // testind = i;
                         }
                     }
                 }
             }
-            // Debug.Log("Current: " + currPos);
-            // Debug.Log("Closest: " + test[1] + " With index: " + testind);
             return similarities;
         }
 
@@ -412,11 +314,8 @@ namespace IVLab.MinVR3
                 var startRot = (Quaternion)drawnSpline[0].Rotation * Vector3.forward;
                 var endRot = (Quaternion)drawnSpline[^1].Rotation * Vector3.forward;
 
-
-
                 float startSimilarity = w_dist * Mathf.Pow(startDist, 2) + Mathf.Abs(w_dir * Vector3.Dot(t, startRot)); 
                 float endSimilarity = w_dist * Mathf.Pow(endDist, 2) + Mathf.Abs(w_dir * Vector3.Dot(t,endRot)); 
-
 
                 // If the split position is between two control points, we split here
                 if (startSimilarity < bestStartDist)
@@ -497,7 +396,6 @@ namespace IVLab.MinVR3
                         var endTargetTan = (endTargetKnot.TangentIn + endTargetKnot.TangentOut) / 2;
                         var endDist = Vector3.Distance(endTargetPos, drawnSpline[^1].Position);
                         float endSimilarity = w_dist * Mathf.Pow(endDist, 2) + Mathf.Abs(w_dir * Vector3.Dot(endDrawnTan,endTargetTan));
-                        // var targetLength = new SplineSlice<Spline>(spline, new SplineRange(Mathf.Min(i,j), Mathf.Abs(i - j))).GetLength();
                         var targetLength = precomputedKnotLengths[Mathf.Min(i, j)..Mathf.Max(i,j)].Sum(); 
                         float totalSimilarity = startSimilarity + endSimilarity + Mathf.Abs(drawnSpline.GetLength() - targetLength);
                         if (totalSimilarity < bestSimilarity)
@@ -505,7 +403,6 @@ namespace IVLab.MinVR3
                             bestSimilarity = totalSimilarity;
                             startIndex = i;
                             endIndex = j;
-                            // Debug.Log("TARGET LENGTH: " + targetLength + " DRAWN LENGTH: " + drawnSpline.GetLength());
                         }
                         
                     }
@@ -612,27 +509,6 @@ namespace IVLab.MinVR3
             NoDataBinding = 2
         }
 
-        // public void StartListening()
-        // {
-        //     VREngine.Instance.eventManager.AddEventListener(this);
-        // }
-        // public void StopListening()
-        // {
-        //     VREngine.Instance?.eventManager?.AddEventListener(this);
-        // }
-
-        // public void OnVREvent(VREvent vrEvent)
-        // {
-        //     if (vrEvent.Matches(m_BrushPosEvent))
-        //     {
-        //         m_BrushPosInWorld = vrEvent.GetData<Vector3>();
-        //     }
-        //     else if (vrEvent.Matches(m_BrushRotEvent))
-        //     {
-        //         m_BrushRotInWorld = vrEvent.GetData<Quaternion>();
-        //     }
-        // }
-
         [Tooltip("Parent Transform for any 3D geometry produced by painting.")]
         [SerializeField] private Transform m_ArtworkParentTransform;
         [Tooltip("The brush cursor mesh renderer.")]
@@ -687,13 +563,6 @@ namespace IVLab.MinVR3
         private bool m_visibleSplines = true;
         public Artwork m_artwork;
         private BrushType m_brushType = 0;
-
-        
-        // [Header("VR Events")]
-        // [SerializeField] private VREventPrototypeVector3 m_BrushPosEvent;
-        // [SerializeField] private VREventPrototypeQuaternion m_BrushRotEvent;
-        // private Vector3 m_BrushPosInWorld;
-        // private Quaternion m_BrushRotInWorld;
     }
 
 } // namespace
