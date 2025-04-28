@@ -9,6 +9,8 @@ public class MenuFunctions : MonoBehaviour
     public SplineFieldMaker splineFieldMaker;
     public FloatingToggleButtons colorBindingMenu;
     public FloatingToggleButtons sizeBindingMenu;
+    public FloatingToggleButtons brushModeMenu;
+    public MainPaintingAndReframingUI mainPaintingAndReframingUI;
     public FloatingMenu presetMenu;
     public List<TextAsset> colorMapPresets;
 
@@ -56,7 +58,7 @@ public class MenuFunctions : MonoBehaviour
 
     public void OnBrushModeMenuItemSelected(int itemId)
     {
-
+        mainPaintingAndReframingUI.SetStrokeType(itemId);
     }
 
     public void OnPresetMenuItemSelected(int itemId)

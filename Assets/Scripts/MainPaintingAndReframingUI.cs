@@ -134,26 +134,28 @@ namespace IVLab.MinVR3
             Debug.Assert(tube != null);
             tube.AddSample(m_BrushCursorTransform.position, m_BrushCursorTransform.rotation, brushScale.x, brushScale.y, m_BrushColor);
             m_strokeTransforms.Add(m_CurrentStrokeObj.transform.WorldPointToLocalSpace(m_BrushCursorTransform.position));
-            
-            List<int> candidateList = m_spatialGrid.GetNearbySplines(m_strokeTransforms);
-            // Debug.Log("NUMBER OF CANDIDATES " + candidateList.Count);
-            if (candidateList.Count == 0)
-            {
-                candidateList = null;
-                Debug.Log("BACKUP CANDIDATE LIST");
-            }
 
-            float[] pointSimilarities = FindSplineSimilarities(m_BrushCursorTransform.LocalPointToWorldSpace(new Vector3 (0,0,0)), m_BrushCursorTransform.rotation, candidateList);
-            for (int i = 0; i < m_strokeSimilarities.Length; i++)
+            if (m_brushType != BrushType.NoDataBinding)
             {
-                m_strokeSimilarities[i] += pointSimilarities[i]; 
+                List<int> candidateList = m_spatialGrid.GetNearbySplines(m_strokeTransforms);
+                if (candidateList.Count == 0)
+                {
+                    candidateList = null;
+                    Debug.Log("BACKUP CANDIDATE LIST");
+                }
+
+                float[] pointSimilarities = FindSplineSimilarities(m_BrushCursorTransform.LocalPointToWorldSpace(new Vector3 (0,0,0)), m_BrushCursorTransform.rotation, candidateList);
+                for (int i = 0; i < m_strokeSimilarities.Length; i++)
+                {
+                    m_strokeSimilarities[i] += pointSimilarities[i]; 
+                }
             }
         }
 
 
         public void Painting_OnExit()
         {
-            if (m_strokeTransforms.Count > 0)
+            if (m_strokeTransforms.Count > 0 && m_brushType != BrushType.NoDataBinding)
             {
                 // Spline spline = FindClosestSpline(m_strokeTransforms, out int splineIndex, out Spline drawnSpline);//, out float splineStart, out float splineEnd);
                 
@@ -593,6 +595,23 @@ namespace IVLab.MinVR3
 
         }
 
+        public void SetStrokeType(int brushType)
+        {
+            m_brushType = (BrushType)brushType; 
+        }
+
+        public void ResetStrokeType()
+        {
+            m_brushType = 0;
+        }
+
+        private enum BrushType
+        {
+            LazyDataBinding = 0,
+            InkDataSettling = 1,
+            NoDataBinding = 2
+        }
+
         // public void StartListening()
         // {
         //     VREngine.Instance.eventManager.AddEventListener(this);
@@ -667,7 +686,7 @@ namespace IVLab.MinVR3
         public SpatialGrid m_spatialGrid;
         private bool m_visibleSplines = true;
         public Artwork m_artwork;
-
+        private BrushType m_brushType = 0;
 
         
         // [Header("VR Events")]
