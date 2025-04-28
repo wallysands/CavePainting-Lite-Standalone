@@ -149,6 +149,9 @@ public class SplineFieldMaker : MonoBehaviour
                 // Manually Added Variables
                 m_maxValues.Add("Speed", float.MinValue);
                 m_minValues.Add("Speed", float.MaxValue);
+                List<string> tmp = featureHeaders.ToList();
+                tmp.Add("Speed");
+                featureHeaders = tmp.ToArray();
 
                 m_splineFeaturesList.Add(new Dictionary<string, List<float>>());
             }

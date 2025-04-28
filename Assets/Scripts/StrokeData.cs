@@ -122,12 +122,21 @@ public class StrokeData : MonoBehaviour
     }
 
     // Returns original drawn width; average data value of input feature
-    public (float, float) GetStrokeInfo(string bindingFeature)
+    public (float, float) GetStrokeInfoWidth(string bindingFeature)
     {
         float width = m_morph.GetOriginalWidth();
         float averageValue = 0;
         foreach (float v in m_strokeData[bindingFeature]) averageValue += v / m_strokeData[bindingFeature].Count();
         return (width, averageValue);
+    }
+
+    // Returns original drawn color; average data value of input feature
+    public (Color, float) GetStrokeInfoColor(string bindingFeature)
+    {
+        Color color = m_morph.GetOriginalColor();
+        float averageValue = 0;
+        foreach (float v in m_strokeData[bindingFeature]) averageValue += v / m_strokeData[bindingFeature].Count();
+        return (color, averageValue);
     }
 
     public void TriggerMorph()

@@ -83,7 +83,7 @@ public class DataMapper : MonoBehaviour
             {
                 List<string> featureNames = strokeData.getFeatureNames();
                 string widthBindingFeature = featureNames[m_SizeDataBindingVariableId];
-                (float drawnWidth, float bindingValue) = strokeData.GetStrokeInfo(widthBindingFeature);
+                (float drawnWidth, float bindingValue) = strokeData.GetStrokeInfoWidth(widthBindingFeature);
                 if (minWidth > drawnWidth || minWidth == -1)
                 {
                     minWidth = drawnWidth;
@@ -103,6 +103,23 @@ public class DataMapper : MonoBehaviour
         }
         m_MaxSize = maxWidth;
         m_MinSize = minWidth;
+    }
+
+    public void InferUserColorMap()
+    {
+        TubeGeometry[] tubes = m_ArtworkRoot.GetComponentsInChildren<TubeGeometry>();
+        m_ColorMap.controlPts.Clear();
+        foreach (TubeGeometry t in tubes)
+        {
+            StrokeData strokeData = t.transform.GetComponentInChildren<StrokeData>();
+            if (strokeData != null)
+            {
+                List<string> featureNames = strokeData.getFeatureNames();
+                string colorBindingFeature = featureNames[m_ColorDataBindingVariableId];
+                (Color color, float averageBoundValue) = strokeData.GetStrokeInfoColor(colorBindingFeature);
+                m_ColorMap.AddControlPt(averageBoundValue, color);
+            }
+        }
     }
 
     public int GetColorDataBindingVariableId()

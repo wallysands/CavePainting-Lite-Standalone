@@ -227,6 +227,12 @@ public class Morphing : MonoBehaviour
         return m_OriginalWidth;
     }
 
+    public Color GetOriginalColor()
+    {
+        // Only one brush color can be used when drawing so it should all be the same color
+        return m_originalBrushColor[0];
+    }
+
     // private Spline m_endingSpline;
     [SerializeField] private float m_animationSpeed = 3.0f;
     [SerializeField] private int segmentsAlongSpline = 50;
