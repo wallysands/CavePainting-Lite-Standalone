@@ -30,7 +30,6 @@ public class DataMapper : MonoBehaviour
                 if (m_SizeDataBindingVariableId != VariableId_None)
                 {
                     Debug.Log("Size bound to " + featureNames[m_SizeDataBindingVariableId]);
-                    InferUserMinMaxWidth();
                     strokeData.AdjustTubeWidth(featureNames[m_SizeDataBindingVariableId], m_MinSize, m_MaxSize, m_InverseWidthMaps);
                 }
                 else
@@ -102,8 +101,8 @@ public class DataMapper : MonoBehaviour
         {
             m_InverseWidthMaps = true;
         }
-        m_MaxSize = maxVal;
-        m_MinSize = minVal;
+        m_MaxSize = maxWidth;
+        m_MinSize = minWidth;
     }
 
     public int GetColorDataBindingVariableId()

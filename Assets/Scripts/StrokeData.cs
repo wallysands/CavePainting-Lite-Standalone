@@ -98,10 +98,12 @@ public class StrokeData : MonoBehaviour
             int dataIndex = (int)dataIndexFloat;
             float dataLerpAmount = dataIndexFloat - dataIndex;
             Debug.Log("Data Index Width: " + dataIndex);
-            float dataScaleValue = Mathf.Max(Mathf.Min(inverse - featToScaleOn[dataIndex], maxValue), minValue);
+            // float dataScaleValue = Mathf.Max(Mathf.Min(Mathf.Abs(inverse - featToScaleOn[dataIndex]), maxValue), minValue);
+            float dataScaleValue = Mathf.Lerp(minValue, maxValue, Mathf.Abs(inverse - featToScaleOn[dataIndex]));
             if (dataIndex < featToScaleOn.Count() - 1)
             {
-                dataScaleValue = Mathf.Lerp(dataScaleValue, Mathf.Max(Mathf.Min(inverse - featToScaleOn[dataIndex+1], maxValue), minValue), dataLerpAmount);
+                // dataScaleValue = Mathf.Lerp(dataScaleValue, Mathf.Max(Mathf.Min(Mathf.Abs(inverse - featToScaleOn[dataIndex+1]), maxValue), minValue), dataLerpAmount);
+                dataScaleValue = Mathf.Lerp(dataScaleValue, Mathf.Lerp(minValue, maxValue, Mathf.Abs(inverse - featToScaleOn[dataIndex+1])), dataLerpAmount);
             }
             dataScaleValue *= m_widthScalar;
             // calculate center of tube
