@@ -88,6 +88,7 @@ namespace IVLab.MinVR3
             TubeGeometry tube = m_CurrentStrokeObj.GetComponent<TubeGeometry>();
             Debug.Assert(tube != null);
             tube.AddSample(m_BrushCursorTransform.position, m_BrushCursorTransform.rotation, brushScale.x, brushScale.y, m_BrushColor);
+
             m_strokeTransforms.Add(m_CurrentStrokeObj.transform.WorldPointToLocalSpace(m_BrushCursorTransform.position));
 
             if (m_brushType != BrushType.NoDataBinding)
@@ -110,17 +111,20 @@ namespace IVLab.MinVR3
 
         public void Painting_OnExit()
         {
-            if (m_strokeTransforms.Count > 0 && m_brushType != BrushType.NoDataBinding)
-            {
+            // Tube Geometry
+            TubeGeometry tube = m_CurrentStrokeObj.GetComponent<TubeGeometry>();
+            Debug.Assert(tube != null);
+            tube.Complete(m_BrushCursorTransform.position, m_BrushCursorTransform.rotation, 0f, 0f, m_BrushColor);
+
+            if (m_strokeTransforms.Count > 2 && m_brushType != BrushType.NoDataBinding) {
                 int splineIndex = FindClosestSplineIndex();
                 Spline drawnSpline = new Spline();
-                foreach (Vector3 t in m_strokeTransforms)
-                {
+                foreach (Vector3 t in m_strokeTransforms) {
                     drawnSpline.Add(new BezierKnot(t), TangentMode.AutoSmooth);
                 }
                 // m_SplineColoredContainer.AddSpline(drawnSpline);
                 Spline spline = m_SplineContainer.Splines[splineIndex];
-                
+
                 // Debug.Log("INDEX CHECK " +splineIndex);
                 Spline nearestSplineSegment = FindSplineSegmentUsingLength(spline, splineIndex, drawnSpline, out int startKnotIndex, out int endKnotIndex);
 
@@ -128,13 +132,8 @@ namespace IVLab.MinVR3
                 Morphing morph = go.GetComponent<Morphing>();
                 morph.transform.SetParent(m_ArtworkParentTransform.transform, false);
                 morph.Init(m_CurrentStrokeObj.GetComponent<TubeGeometry>(), nearestSplineSegment, m_ArtworkParentTransform, m_BrushColor, m_BrushCursorTransform.localScale);
-                
-                // Tube Geometry
-                TubeGeometry tube = m_CurrentStrokeObj.GetComponent<TubeGeometry>();
-                Debug.Assert(tube != null);
-                tube.Complete(m_BrushCursorTransform.position, m_BrushCursorTransform.rotation, 0f, 0f, m_BrushColor);
-                for (int i = 0; i<m_strokeSimilarities.Length; i++)
-                {
+
+                for (int i = 0; i < m_strokeSimilarities.Length; i++) {
                     m_strokeSimilarities[i] = 0;
                 }
 
@@ -147,9 +146,13 @@ namespace IVLab.MinVR3
 
                 // Wait to add this until the morph is complete.
                 //MeshCollider mc = m_CurrentStrokeObj.AddComponent(typeof(MeshCollider)) as MeshCollider;
-            }
 
-            m_NumStrokes++;
+                m_NumStrokes++;
+            }
+            else {
+                // not enough samples to create a tube
+                DestroyImmediate(tube.gameObject);
+            }
         }
 
         public Spline FindClosestSpline(List<Vector3> centers, out int bestIndex, out Spline drawnSpline)//, out float splineStartIndex, out float splineEndIndex)
