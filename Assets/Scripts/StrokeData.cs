@@ -62,10 +62,10 @@ public class StrokeData : MonoBehaviour
         int dataIndex = (int)dataIndexFloat;
         float dataLerpAmount = dataIndexFloat - dataIndex;
         // Debug.Log("Data Index: " + dataIndex);
-        float dataValue = inverse - featureValsAtKnots[dataIndex];
+        float dataValue = Mathf.Abs(inverse - featureValsAtKnots[dataIndex]);
         if (dataIndex < featureValsAtKnots.Count() - 1)
         {
-            dataValue = Mathf.Lerp(dataValue, inverse - featureValsAtKnots[dataIndex + 1], dataLerpAmount);
+            dataValue = Mathf.Lerp(dataValue, Mathf.Abs(inverse - featureValsAtKnots[dataIndex + 1]), dataLerpAmount);
         }
         return dataValue;
     }
