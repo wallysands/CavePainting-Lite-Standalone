@@ -129,7 +129,6 @@ public class Morphing : MonoBehaviour
     {
         if (alpha >= 1)
         {
-            Debug.Log("STARTING MORPH AGAIN?");
             Destroy(m_startingTube.gameObject.GetComponent<MeshCollider>());
             Mesh startingMesh = m_startingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh;
             startingMesh.vertices = m_MorphingMesh.vertices;

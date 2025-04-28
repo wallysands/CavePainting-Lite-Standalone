@@ -10,7 +10,6 @@ public class StrokeData : MonoBehaviour
 //"AsH3","CH4","GaMe3","H2","Pres","Temp","V:0","V:1","V:2","IntegrationTime","Vorticity:0","Vorticity:1","Vorticity:2","Rotation","AngularVelocity","Normals:0","Normals:1","Normals:2","Points:0","Points:1","Points:2"
     public Dictionary<string, List<float>> m_strokeData = new Dictionary<string, List<float>>();
     private GameObject m_currentStrokeObj;
-    private float m_widthScalar = 0.5f; // Gets very large very quick if not scaled down
     private TubeGeometry m_morphStroke;
     private Dictionary<string,float> m_maxValues;
     private Dictionary<string,float> m_minValues;
@@ -97,7 +96,6 @@ public class StrokeData : MonoBehaviour
             float dataIndexFloat = (t * (featToScaleOn.Count()-1));
             int dataIndex = (int)dataIndexFloat;
             float dataLerpAmount = dataIndexFloat - dataIndex;
-            Debug.Log("Data Index Width: " + dataIndex);
             // float dataScaleValue = Mathf.Max(Mathf.Min(Mathf.Abs(inverse - featToScaleOn[dataIndex]), maxValue), minValue);
             float dataScaleValue = Mathf.Lerp(minValue, maxValue, Mathf.Abs(inverse - featToScaleOn[dataIndex]));
             if (dataIndex < featToScaleOn.Count() - 1)
@@ -105,7 +103,6 @@ public class StrokeData : MonoBehaviour
                 // dataScaleValue = Mathf.Lerp(dataScaleValue, Mathf.Max(Mathf.Min(Mathf.Abs(inverse - featToScaleOn[dataIndex+1]), maxValue), minValue), dataLerpAmount);
                 dataScaleValue = Mathf.Lerp(dataScaleValue, Mathf.Lerp(minValue, maxValue, Mathf.Abs(inverse - featToScaleOn[dataIndex+1])), dataLerpAmount);
             }
-            dataScaleValue *= m_widthScalar;
             // calculate center of tube
             Vector3 center = new Vector3(0,0,0);
             foreach (Vector3 v in m_morphStroke.GetVertices().ToList().GetRange(i, numFaces)) center += (v / numFaces);

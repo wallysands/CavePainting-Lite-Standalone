@@ -28,20 +28,16 @@ public class SpatialGrid : MonoBehaviour
             }
         }
         int max_count = 0;
-        int min_count = 0;
+        int min_count = int.MaxValue;
         foreach (Vector3 key in m_Dict.Keys)
         {
             if (max_count < m_Dict[key].Count)
             {
                 max_count = m_Dict[key].Count;
             }
-            if (min_count >= m_Dict[key].Count)
+            if (min_count > m_Dict[key].Count)
             {
                 min_count = m_Dict[key].Count;
-                if (min_count == 0)
-                {
-                    Debug.Log("THIS KEY HAS 0 VALUES: " + key);
-                }
             }
         }
         Debug.Log("NUMBER OF KEYS: " + m_Dict.Keys.Count);
