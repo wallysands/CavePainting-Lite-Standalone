@@ -67,6 +67,9 @@ public class Morphing : MonoBehaviour
         m_MorphingMesh = m_startingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh;
         m_MorphComplete = false;
 
+        // Calculate Original Width
+        m_OriginalWidth = Vector3.Distance(m_endingVertices[0], m_endingVertices[1]);
+
         // m_Mesh.SetVertices(m_Vertices);
         // m_Mesh.SetNormals(m_Normals);
         // m_Mesh.SetColors(m_Colors);
@@ -220,6 +223,11 @@ public class Morphing : MonoBehaviour
         }
     }
 
+    public float GetOriginalWidth()
+    {
+        return m_OriginalWidth;
+    }
+
     // private Spline m_endingSpline;
     [SerializeField] private float m_animationSpeed = 3.0f;
     [SerializeField] private int segmentsAlongSpline = 50;
@@ -247,4 +255,5 @@ public class Morphing : MonoBehaviour
     // Original Values
     private Color[] m_originalBrushColor;
     private Vector3[] m_originalVertices;
+    private float m_OriginalWidth;
 }

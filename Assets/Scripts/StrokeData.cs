@@ -10,7 +10,7 @@ public class StrokeData : MonoBehaviour
 //"AsH3","CH4","GaMe3","H2","Pres","Temp","V:0","V:1","V:2","IntegrationTime","Vorticity:0","Vorticity:1","Vorticity:2","Rotation","AngularVelocity","Normals:0","Normals:1","Normals:2","Points:0","Points:1","Points:2"
     public Dictionary<string, List<float>> m_strokeData = new Dictionary<string, List<float>>();
     private GameObject m_currentStrokeObj;
-    private float m_speedScalar = 0.5f;
+    private float m_widthScalar = 0.5f; // Gets very large very quick if not scaled down
     private TubeGeometry m_morphStroke;
     private Dictionary<string,float> m_maxValues;
     private Dictionary<string,float> m_minValues;
@@ -47,8 +47,12 @@ public class StrokeData : MonoBehaviour
         return m_strokeData.Keys.ToList();
     }
 
-    public float GetDataValueAlongSpline(string feat, float fracAlongSpline)
+    public float GetDataValueAlongSpline(string feat, float fracAlongSpline, bool inverseMappings)
     {
+        // Determine if high values should make the tube smaller or larger (0 = high values => larger)
+        int inverse = 0;
+        if (inverseMappings) inverse = 1;
+        
         Debug.Assert(m_strokeData.ContainsKey(feat));
         List<float> featureValsAtKnots = m_strokeData[feat];
         // Debug.Log("Along Spline: " + fracAlongSpline);
@@ -58,17 +62,20 @@ public class StrokeData : MonoBehaviour
         int dataIndex = (int)dataIndexFloat;
         float dataLerpAmount = dataIndexFloat - dataIndex;
         // Debug.Log("Data Index: " + dataIndex);
-        float dataValue = featureValsAtKnots[dataIndex];
+        float dataValue = inverse - featureValsAtKnots[dataIndex];
         if (dataIndex < featureValsAtKnots.Count() - 1)
         {
-            dataValue = Mathf.Lerp(featureValsAtKnots[dataIndex], featureValsAtKnots[dataIndex + 1], dataLerpAmount);
+            dataValue = Mathf.Lerp(dataValue, inverse - featureValsAtKnots[dataIndex + 1], dataLerpAmount);
         }
         return dataValue;
     }
 
-    public void AdjustTubeWidth(string feat, float minValue, float maxValue)
+    public void AdjustTubeWidth(string feat, float minValue, float maxValue, bool inverseMappings)
     {
-        // m_startingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh;
+        // Determine if high values should make the tube smaller or larger (0 = high values => larger)
+        int inverse = 0;
+        if (inverseMappings) inverse = 1;
+
         if (minValue == -1)
         {
             Debug.Log("MIN VALUE DEFAULT");
@@ -91,12 +98,12 @@ public class StrokeData : MonoBehaviour
             int dataIndex = (int)dataIndexFloat;
             float dataLerpAmount = dataIndexFloat - dataIndex;
             Debug.Log("Data Index Width: " + dataIndex);
-            float dataScaleValue = Mathf.Max(Mathf.Min(featToScaleOn[dataIndex], maxValue), minValue);
+            float dataScaleValue = Mathf.Max(Mathf.Min(inverse - featToScaleOn[dataIndex], maxValue), minValue);
             if (dataIndex < featToScaleOn.Count() - 1)
             {
-                dataScaleValue = Mathf.Lerp(dataScaleValue, Mathf.Max(Mathf.Min(featToScaleOn[dataIndex+1], maxValue), minValue), dataLerpAmount);
+                dataScaleValue = Mathf.Lerp(dataScaleValue, Mathf.Max(Mathf.Min(inverse - featToScaleOn[dataIndex+1], maxValue), minValue), dataLerpAmount);
             }
-            dataScaleValue *= m_speedScalar;
+            dataScaleValue *= m_widthScalar;
             // calculate center of tube
             Vector3 center = new Vector3(0,0,0);
             foreach (Vector3 v in m_morphStroke.GetVertices().ToList().GetRange(i, numFaces)) center += (v / numFaces);
@@ -113,6 +120,15 @@ public class StrokeData : MonoBehaviour
         }
         // Debug.Log(strokeVertices[0]);
         m_morph.m_endingVertices = strokeVertices.ToArray();
+    }
+
+    // Returns original drawn width; average data value of input feature
+    public (float, float) GetStrokeInfo(string bindingFeature)
+    {
+        float width = m_morph.GetOriginalWidth();
+        float averageValue = 0;
+        foreach (float v in m_strokeData[bindingFeature]) averageValue += v / m_strokeData[bindingFeature].Count();
+        return (width, averageValue);
     }
 
     public void TriggerMorph()
