@@ -30,11 +30,10 @@ public class DataMapper : MonoBehaviour
                 if (m_SizeDataBindingVariableId != VariableId_None)
                 {
                     Debug.Log("Size bound to " + featureNames[m_SizeDataBindingVariableId]);
-                    strokeData.AdjustTubeWidth(featureNames[m_SizeDataBindingVariableId], m_MinSize, m_MaxSize);
+                    strokeData.AdjustTubeWidth(featureNames[m_SizeDataBindingVariableId], m_MinSize, m_MaxSize, m_InverseWidthMaps);
                 }
                 else
                 {
-                    // TODO: Reset to original width
                     strokeData.ResetWidths();
                 }
 
@@ -48,7 +47,7 @@ public class DataMapper : MonoBehaviour
 
                     for (int i = 0; i < t.GetNumSamples(); i++)
                     {
-                        float dataVal = strokeData.GetDataValueAlongSpline(colorFeatureName, t.GetFracAlongLine(i));
+                        float dataVal = strokeData.GetDataValueAlongSpline(colorFeatureName, t.GetFracAlongLine(i), m_InverseColorMaps);
                         colors[i] = m_ColorMap.LookupColor(dataVal);
                     }
                     strokeData.SetColors(colors);
@@ -70,6 +69,41 @@ public class DataMapper : MonoBehaviour
         }
     }
 
+    public void InferUserMinMaxWidth()
+    {
+        TubeGeometry[] tubes = m_ArtworkRoot.GetComponentsInChildren<TubeGeometry>();
+        float minWidth = -1;
+        float minVal = 0;
+        float maxWidth = -1;
+        float maxVal = 0;
+        foreach (TubeGeometry t in tubes)
+        {
+            StrokeData strokeData = t.transform.GetComponentInChildren<StrokeData>();
+            if (strokeData != null)
+            {
+                List<string> featureNames = strokeData.getFeatureNames();
+                string widthBindingFeature = featureNames[m_SizeDataBindingVariableId];
+                (float drawnWidth, float bindingValue) = strokeData.GetStrokeInfo(widthBindingFeature);
+                if (minWidth > drawnWidth || minWidth == -1)
+                {
+                    minWidth = drawnWidth;
+                    minVal = bindingValue;
+                }
+                else if (maxWidth < drawnWidth)
+                {
+                    maxWidth = drawnWidth;
+                    maxVal = bindingValue;
+                }
+            }
+        }
+        Debug.Log("Min Value: " + minVal + " Max Value: " + maxVal);
+        if (minVal > maxVal)
+        {
+            m_InverseWidthMaps = true;
+        }
+        m_MaxSize = maxWidth;
+        m_MinSize = minWidth;
+    }
 
     public int GetColorDataBindingVariableId()
     {
@@ -130,4 +164,6 @@ public class DataMapper : MonoBehaviour
     [SerializeField] private float m_MaxSize = -1;
 
     [SerializeField] private GameObject m_ArtworkRoot;
+    [SerializeField] private bool m_InverseColorMaps = false;
+    [SerializeField] private bool m_InverseWidthMaps = false;
 }

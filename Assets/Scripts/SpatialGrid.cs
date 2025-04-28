@@ -22,11 +22,32 @@ public class SpatialGrid : MonoBehaviour
                 }
                 else
                 {
-                    m_Dict.Add(roundedPosition, new List<int>(i));
+                    m_Dict.Add(roundedPosition, new List<int>());
+                    m_Dict[roundedPosition].Add(i);
+                }
+            }
+        }
+        int max_count = 0;
+        int min_count = 0;
+        foreach (Vector3 key in m_Dict.Keys)
+        {
+            if (max_count < m_Dict[key].Count)
+            {
+                max_count = m_Dict[key].Count;
+            }
+            if (min_count >= m_Dict[key].Count)
+            {
+                min_count = m_Dict[key].Count;
+                if (min_count == 0)
+                {
+                    Debug.Log("THIS KEY HAS 0 VALUES: " + key);
                 }
             }
         }
         Debug.Log("NUMBER OF KEYS: " + m_Dict.Keys.Count);
+        Debug.Log("AVERAGE COUNT WITHIN KEY: " + m_Dict.Values.Count / m_Dict.Keys.Count);
+        Debug.Log("MAX COUNT WITHIN KEY: " + max_count);
+        Debug.Log("MIN COUNT WITHIN KEY: " + min_count);        
     }
 
     public List<int> GetNearbySplines(Vector3 pos)

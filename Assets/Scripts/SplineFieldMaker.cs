@@ -13,14 +13,18 @@ public class SplineFieldMaker : MonoBehaviour
     public SplineContainer m_splineContainer;
     public SpatialGrid m_spatialGrid;
     public List<Dictionary<string, List<float>>> m_splineFeaturesList = new List<Dictionary<string, List<float>>>();
-    private string[] featureHeaders;
+    public string[] featureHeaders;
     public Dictionary<string,float> m_maxValues = new Dictionary<string, float>();
     public Dictionary<string,float> m_minValues = new Dictionary<string, float>();
 
-    // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
         ReadCSV(textAssetData);
+    }
+
+    // Start is called before the first frame update
+    private void Start()
+    {
         m_splineContainer.transform.SetParent(m_ArtworkParentTransform, false);
         m_spatialGrid.Init();
     }
