@@ -64,7 +64,7 @@ public class MenuFunctions : MonoBehaviour
             colorBindingMenu.gameObject.SetActive(true);
             sizeBindingMenu.gameObject.SetActive(true);
         }
-        else 
+        else
         {
             colorBindingMenu.gameObject.SetActive(false);
             sizeBindingMenu.gameObject.SetActive(false);

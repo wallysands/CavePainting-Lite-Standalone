@@ -28,11 +28,6 @@ public class Morphing : MonoBehaviour
         m_endingColors = m_endingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh.colors;
         m_originalVertices = m_endingVertices;
         m_originalBrushColor = m_endingColors;
-        
-        // For lazy data binding mode
-        m_stationaryVertices = m_startingVertices;
-        m_stationaryNormals = m_startingNormals;
-        m_stationaryColors = m_startingColors;
 
 
         // If the tube would flip when morphing, reorganize vertices so it doesn't
@@ -65,6 +60,13 @@ public class Morphing : MonoBehaviour
             m_startingNormals = tempNorms;
             m_startingColors = tempCols;
             Mesh startingMesh = m_startingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh;
+
+            startingMesh.vertices = m_startingVertices;
+            startingMesh.normals = m_startingNormals;
+            startingMesh.colors = m_startingColors;
+
+            m_startingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh = startingMesh;
+            
             // startingMesh.vertices = m_endingVertices;
             // startingMesh.normals = m_endingNormals;
             // startingMesh.colors = m_endingColors;
@@ -81,6 +83,12 @@ public class Morphing : MonoBehaviour
         // m_Mesh.SetColors(m_Colors);
         // m_Mesh.SetUVs(0, m_TexCoords);
         // m_Mesh.SetIndices(m_Indices, MeshTopology.Triangles, 0);  
+
+        // For lazy data binding mode
+        m_stationaryVertices = m_startingVertices;
+        m_stationaryNormals = m_startingNormals;
+        m_stationaryColors = m_startingColors;
+        m_originalStationaryVertices = m_stationaryVertices;
     }
 
     private TubeGeometry CreateTube(Spline spline, TubeGeometry matchTube)
@@ -134,11 +142,11 @@ public class Morphing : MonoBehaviour
     public void NewMorph()
     {
         Destroy(m_startingTube.gameObject.GetComponent<MeshCollider>());
-        Mesh startingMesh = m_startingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh;
-        startingMesh.vertices = m_MorphingMesh.vertices;
-        startingMesh.normals = m_MorphingMesh.normals;
-        startingMesh.colors = m_MorphingMesh.colors;
-        m_startingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh = startingMesh;
+        // Mesh startingMesh = m_startingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh;
+        // startingMesh.vertices = m_MorphingMesh.vertices;
+        // startingMesh.normals = m_MorphingMesh.normals;
+        // startingMesh.colors = m_MorphingMesh.colors;
+        // m_startingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh = startingMesh;
         alpha = 0;
         m_MorphComplete = false;
     }
@@ -158,7 +166,7 @@ public class Morphing : MonoBehaviour
     public void ResetWidths()
     {
         m_endingVertices = m_originalVertices;
-        m_stationaryVertices = m_stationaryVertices;
+        m_stationaryVertices = m_originalStationaryVertices;
     }
 
     void Update()
@@ -267,6 +275,7 @@ public class Morphing : MonoBehaviour
     // Original Values
     private Color[] m_originalBrushColor;
     private Vector3[] m_originalVertices;
+    private Vector3[] m_originalStationaryVertices;
     private float m_OriginalWidth;
     public bool m_Settle;
 }
