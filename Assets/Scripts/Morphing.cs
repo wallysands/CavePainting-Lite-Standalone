@@ -147,6 +147,89 @@ public class Morphing : MonoBehaviour
         // startingMesh.normals = m_MorphingMesh.normals;
         // startingMesh.colors = m_MorphingMesh.colors;
         // m_startingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh = startingMesh;
+        // If the tube would flip when morphing, reorganize vertices so it doesn't. Bandaid fix, because I can't find why stationary tubes are flipping when a width mapping is applied
+        if (!m_Settle && Vector3.Distance(m_startingVertices[0], m_stationaryVertices[0]) >= Vector3.Distance(m_startingVertices[^1], m_stationaryVertices[0])) {
+            int faces = m_startingTube.GetNumFaces() + 1;
+
+            m_startingVertices = m_startingVertices.Reverse().ToArray();
+            m_startingNormals = m_startingNormals.Reverse().ToArray();
+            m_startingColors = m_startingColors.Reverse().ToArray();
+
+
+            Vector3[] tempVerts = new Vector3[m_startingVertices.Length];
+            Vector3[] tempNorms = new Vector3[m_startingNormals.Length];
+            Color[] tempCols = new Color[m_startingColors.Length];
+
+            Debug.Log("FLIPPING VERTS " + m_endingVertices.Length + " " + (int)(1.9));
+
+
+            for (int i = 0; i < m_startingVertices.Length; i++) {
+                //=FLOOR(A1/($C$3+1)) * ($C$3+1)  + MOD($C$3 - A1,($C$3 + 1))
+                tempVerts[i] = m_startingVertices[(int)(i / (faces)) * faces + ((faces - 1 - i) % faces)];
+            }
+            for (int i = 0; i < m_startingNormals.Length; i++) {
+                tempNorms[i] = m_startingNormals[(int)(i / (faces)) * faces + ((faces - 1 - i) % faces)];
+            }
+            for (int i = 0; i < m_startingColors.Length; i++) {
+                tempCols[i] = m_startingColors[(int)(i / (faces)) * faces + ((faces - 1 - i) % faces)];
+            }
+            m_startingVertices = tempVerts;
+            m_startingNormals = tempNorms;
+            m_startingColors = tempCols;
+            Mesh startingMesh = m_startingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh;
+
+            startingMesh.vertices = m_startingVertices;
+            startingMesh.normals = m_startingNormals;
+            startingMesh.colors = m_startingColors;
+
+            m_startingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh = startingMesh;
+            
+            // startingMesh.vertices = m_endingVertices;
+            // startingMesh.normals = m_endingNormals;
+            // startingMesh.colors = m_endingColors;
+        }
+        else if (m_Settle && Vector3.Distance(m_startingVertices[0], m_endingVertices[0]) >= Vector3.Distance(m_startingVertices[^1], m_endingVertices[0])) {
+            int faces = m_startingTube.GetNumFaces() + 1;
+
+            m_startingVertices = m_startingVertices.Reverse().ToArray();
+            m_startingNormals = m_startingNormals.Reverse().ToArray();
+            m_startingColors = m_startingColors.Reverse().ToArray();
+
+
+            Vector3[] tempVerts = new Vector3[m_startingVertices.Length];
+            Vector3[] tempNorms = new Vector3[m_startingNormals.Length];
+            Color[] tempCols = new Color[m_startingColors.Length];
+
+            Debug.Log("FLIPPING VERTS " + m_endingVertices.Length + " " + (int)(1.9));
+
+
+            for (int i = 0; i < m_startingVertices.Length; i++) {
+                //=FLOOR(A1/($C$3+1)) * ($C$3+1)  + MOD($C$3 - A1,($C$3 + 1))
+                tempVerts[i] = m_startingVertices[(int)(i / (faces)) * faces + ((faces - 1 - i) % faces)];
+            }
+            for (int i = 0; i < m_startingNormals.Length; i++) {
+                tempNorms[i] = m_startingNormals[(int)(i / (faces)) * faces + ((faces - 1 - i) % faces)];
+            }
+            for (int i = 0; i < m_startingColors.Length; i++) {
+                tempCols[i] = m_startingColors[(int)(i / (faces)) * faces + ((faces - 1 - i) % faces)];
+            }
+            m_startingVertices = tempVerts;
+            m_startingNormals = tempNorms;
+            m_startingColors = tempCols;
+            Mesh startingMesh = m_startingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh;
+
+            startingMesh.vertices = m_startingVertices;
+            startingMesh.normals = m_startingNormals;
+            startingMesh.colors = m_startingColors;
+
+            m_startingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh = startingMesh;
+            
+            // startingMesh.vertices = m_endingVertices;
+            // startingMesh.normals = m_endingNormals;
+            // startingMesh.colors = m_endingColors;
+        }
+
+        m_MorphingMesh = m_startingTube.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh;
         alpha = 0;
         m_MorphComplete = false;
     }
