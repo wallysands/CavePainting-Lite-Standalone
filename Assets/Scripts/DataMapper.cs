@@ -25,48 +25,93 @@ public class DataMapper : MonoBehaviour
             if (strokeData != null)
             {
                 Debug.Log("Got Stroke Data");
-                List<string> featureNames = strokeData.getFeatureNames();
+                // List<string> featureNames = strokeData.getFeatureNames();
 
-                if (m_SizeDataBindingVariableId != VariableId_None)
-                {
-                    Debug.Log("Size bound to " + featureNames[m_SizeDataBindingVariableId]);
-                    strokeData.AdjustTubeWidth(featureNames[m_SizeDataBindingVariableId], m_MinSize, m_MaxSize, m_InverseWidthMaps);
-                }
-                else
-                {
-                    strokeData.ResetWidths();
-                }
+                // if (m_SizeDataBindingVariableId != VariableId_None)
+                // {
+                //     Debug.Log("Size bound to " + featureNames[m_SizeDataBindingVariableId]);
+                //     strokeData.AdjustTubeWidth(featureNames[m_SizeDataBindingVariableId], m_MinSize, m_MaxSize, m_InverseWidthMaps);
+                // }
+                // else
+                // {
+                //     strokeData.ResetWidths();
+                // }
 
-                // fill in the array of colors based on underlying data
+                // // fill in the array of colors based on underlying data
 
-                Color[] colors = new Color[t.GetNumSamples()];
-                if (m_ColorDataBindingVariableId != VariableId_None)
-                {
-                    string colorFeatureName = featureNames[m_ColorDataBindingVariableId];
-                    Debug.Log("Color bound to " + featureNames[m_ColorDataBindingVariableId]);
+                // Color[] colors = new Color[t.GetNumSamples()];
+                // if (m_ColorDataBindingVariableId != VariableId_None)
+                // {
+                //     string colorFeatureName = featureNames[m_ColorDataBindingVariableId];
+                //     Debug.Log("Color bound to " + featureNames[m_ColorDataBindingVariableId]);
 
-                    for (int i = 0; i < t.GetNumSamples(); i++)
-                    {
-                        float dataVal = strokeData.GetDataValueAlongSpline(colorFeatureName, t.GetFracAlongLine(i), m_InverseColorMaps);
-                        colors[i] = m_ColorMap.LookupColor(dataVal);
-                    }
-                    strokeData.SetColors(colors);
-                }
-                else
-                {
-                    // for (int i = 0; i < t.GetNumSamples(); i++)
-                    // {
-                    //     // TODO: Reset to original color
-                    //     colors[i] = Color.white;
+                //     for (int i = 0; i < t.GetNumSamples(); i++)
+                //     {
+                //         float dataVal = strokeData.GetDataValueAlongSpline(colorFeatureName, t.GetFracAlongLine(i), m_InverseColorMaps);
+                //         colors[i] = m_ColorMap.LookupColor(dataVal);
+                //     }
+                //     strokeData.SetColors(colors);
+                // }
+                // else
+                // {
+                //     // for (int i = 0; i < t.GetNumSamples(); i++)
+                //     // {
+                //     //     // TODO: Reset to original color
+                //     //     colors[i] = Color.white;
                         
-                    // }
-                    strokeData.ResetColors();
-                }
+                //     // }
+                //     strokeData.ResetColors();
+                // }
                 
-                // t.SetColorsPerSample(colors);
-                strokeData.TriggerMorph();
+                // // t.SetColorsPerSample(colors);
+                // strokeData.TriggerMorph();
+                ApplyDataMappingsToStroke(t, strokeData);
             }
         }
+    }
+
+    public void ApplyDataMappingsToStroke(TubeGeometry t, StrokeData strokeData)
+    {
+        List<string> featureNames = strokeData.getFeatureNames();
+
+        if (m_SizeDataBindingVariableId != VariableId_None)
+        {
+            Debug.Log("Size bound to " + featureNames[m_SizeDataBindingVariableId]);
+            strokeData.AdjustTubeWidth(featureNames[m_SizeDataBindingVariableId], m_MinSize, m_MaxSize, m_InverseWidthMaps);
+        }
+        else
+        {
+            strokeData.ResetWidths();
+        }
+
+        // fill in the array of colors based on underlying data
+
+        Color[] colors = new Color[t.GetNumSamples()];
+        if (m_ColorDataBindingVariableId != VariableId_None)
+        {
+            string colorFeatureName = featureNames[m_ColorDataBindingVariableId];
+            Debug.Log("Color bound to " + featureNames[m_ColorDataBindingVariableId]);
+
+            for (int i = 0; i < t.GetNumSamples(); i++)
+            {
+                float dataVal = strokeData.GetDataValueAlongSpline(colorFeatureName, t.GetFracAlongLine(i), m_InverseColorMaps);
+                colors[i] = m_ColorMap.LookupColor(dataVal);
+            }
+            strokeData.SetColors(colors);
+        }
+        else
+        {
+            // for (int i = 0; i < t.GetNumSamples(); i++)
+            // {
+            //     // TODO: Reset to original color
+            //     colors[i] = Color.white;
+                
+            // }
+            strokeData.ResetColors();
+        }
+        
+        // t.SetColorsPerSample(colors);
+        strokeData.TriggerMorph();
     }
 
     public void InferUserMinMaxWidth()
@@ -97,12 +142,21 @@ public class DataMapper : MonoBehaviour
             }
         }
         Debug.Log("Min Value: " + minVal + " Max Value: " + maxVal);
+        
         if (minVal > maxVal)
         {
             m_InverseWidthMaps = true;
+            float tmp = minVal;
+            minVal = maxVal;
+            maxVal = tmp;
+        }
+        if (maxVal - minVal < 0.01)
+        {
+            maxVal += 0.01f;
         }
         m_MaxSize = maxWidth;
         m_MinSize = minWidth;
+        ApplyDataMappingsToStrokes();
     }
 
     public void InferUserColorMap()
@@ -120,6 +174,8 @@ public class DataMapper : MonoBehaviour
                 m_ColorMap.AddControlPt(averageBoundValue, color);
             }
         }
+        
+        ApplyDataMappingsToStrokes();
     }
 
     public int GetColorDataBindingVariableId()
@@ -129,20 +185,21 @@ public class DataMapper : MonoBehaviour
 
     public void SetColorDataBinding(int variableId)
     {
-        if (m_ColorDataBindingVariableId != variableId)
-        {
+        // if (m_ColorDataBindingVariableId != variableId)
+        // {
             m_ColorDataBindingVariableId = variableId;
             ApplyDataMappingsToStrokes();
-        }
+        // }
     }
 
     public void ClearColorDataBinding()
     {
-        if (m_ColorDataBindingVariableId != VariableId_None)
-        {
+        // if (m_ColorDataBindingVariableId != VariableId_None)
+        // {
             m_ColorDataBindingVariableId = VariableId_None;
             ApplyDataMappingsToStrokes();
-        }
+
+        // }
     }
 
 
@@ -154,20 +211,28 @@ public class DataMapper : MonoBehaviour
 
     public void SetSizeDataBinding(int variableId)
     {
-        if (m_SizeDataBindingVariableId != variableId)
-        {
+        // if (m_SizeDataBindingVariableId != variableId)
+        // {
             m_SizeDataBindingVariableId = variableId;
+
             ApplyDataMappingsToStrokes();
-        }
+        // }
     }
 
     public void ClearSizeDataBinding()
     {
-        if (m_SizeDataBindingVariableId != VariableId_None)
-        {
+        // if (m_SizeDataBindingVariableId != VariableId_None)
+        // {
             m_SizeDataBindingVariableId = VariableId_None;
+            ResetWidthParams();
             ApplyDataMappingsToStrokes();
-        }
+        // }
+    }
+
+    public void ResetWidthParams()
+    {
+        m_MinSize = 0.005f;
+        m_MaxSize = 0.3f;
     }
 
 

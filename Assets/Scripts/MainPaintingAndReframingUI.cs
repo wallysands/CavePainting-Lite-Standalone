@@ -143,13 +143,17 @@ namespace IVLab.MinVR3
                 strokedata.transform.SetParent(tube.transform);
                 SplineFieldMaker sfm = m_SplineContainer.GetComponent<SplineFieldMaker>();
                 strokedata.Init(sfm.m_splineFeaturesList[splineIndex], m_CurrentStrokeObj, startKnotIndex, endKnotIndex, sfm.m_maxValues, sfm.m_minValues, morph);
-
+                if (m_brushType == BrushType.Both || m_brushType == BrushType.LazyDataBinding)
+                {
+                    m_dataMapper.ApplyDataMappingsToStroke(tube, strokedata);
+                }
                 // Wait to add this until the morph is complete.
                 //MeshCollider mc = m_CurrentStrokeObj.AddComponent(typeof(MeshCollider)) as MeshCollider;
 
                 m_NumStrokes++;
             }
-            else {
+            else if (m_brushType != BrushType.NoDataBinding)
+            {
                 // not enough samples to create a tube
                 DestroyImmediate(tube.gameObject);
             }
@@ -507,9 +511,10 @@ namespace IVLab.MinVR3
 
         private enum BrushType
         {
-            LazyDataBinding = 0,
-            InkDataSettling = 1,
-            NoDataBinding = 2
+            Both = 0,
+            LazyDataBinding = 1,
+            InkDataSettling = 2,
+            NoDataBinding = 3
         }
 
         [Tooltip("Parent Transform for any 3D geometry produced by painting.")]
@@ -566,6 +571,8 @@ namespace IVLab.MinVR3
         private bool m_visibleSplines = true;
         public Artwork m_artwork;
         private BrushType m_brushType = 0;
+
+        [SerializeField] private DataMapper m_dataMapper;
     }
 
 } // namespace
