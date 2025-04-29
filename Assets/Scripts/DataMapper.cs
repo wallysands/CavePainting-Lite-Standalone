@@ -25,46 +25,6 @@ public class DataMapper : MonoBehaviour
             if (strokeData != null)
             {
                 Debug.Log("Got Stroke Data");
-                // List<string> featureNames = strokeData.getFeatureNames();
-
-                // if (m_SizeDataBindingVariableId != VariableId_None)
-                // {
-                //     Debug.Log("Size bound to " + featureNames[m_SizeDataBindingVariableId]);
-                //     strokeData.AdjustTubeWidth(featureNames[m_SizeDataBindingVariableId], m_MinSize, m_MaxSize, m_InverseWidthMaps);
-                // }
-                // else
-                // {
-                //     strokeData.ResetWidths();
-                // }
-
-                // // fill in the array of colors based on underlying data
-
-                // Color[] colors = new Color[t.GetNumSamples()];
-                // if (m_ColorDataBindingVariableId != VariableId_None)
-                // {
-                //     string colorFeatureName = featureNames[m_ColorDataBindingVariableId];
-                //     Debug.Log("Color bound to " + featureNames[m_ColorDataBindingVariableId]);
-
-                //     for (int i = 0; i < t.GetNumSamples(); i++)
-                //     {
-                //         float dataVal = strokeData.GetDataValueAlongSpline(colorFeatureName, t.GetFracAlongLine(i), m_InverseColorMaps);
-                //         colors[i] = m_ColorMap.LookupColor(dataVal);
-                //     }
-                //     strokeData.SetColors(colors);
-                // }
-                // else
-                // {
-                //     // for (int i = 0; i < t.GetNumSamples(); i++)
-                //     // {
-                //     //     // TODO: Reset to original color
-                //     //     colors[i] = Color.white;
-                        
-                //     // }
-                //     strokeData.ResetColors();
-                // }
-                
-                // // t.SetColorsPerSample(colors);
-                // strokeData.TriggerMorph();
                 ApplyDataMappingsToStroke(t, strokeData);
             }
         }

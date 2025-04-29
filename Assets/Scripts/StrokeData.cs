@@ -34,13 +34,6 @@ public class StrokeData : MonoBehaviour
             // Normalize these values
             for (int i = 0; i < m_strokeData[key].Count(); i++) m_strokeData[key][i] = (m_strokeData[key][i] - m_minValues[key]) / (m_maxValues[key] - m_minValues[key]);
         }
-        if (m_strokeData.ContainsKey("V:0"))
-        {
-            // DetermineSpeed();
-            // Debug.Log(m_morphStroke);
-            // foreach(float v in m_strokeData["Speed"]) Debug.Log(v);
-            // AdjustTubeWidth("Speed");
-        }
     }
 
     public List<string> getFeatureNames()
