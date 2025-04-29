@@ -87,7 +87,7 @@ namespace IVLab.MinVR3
 
             TubeGeometry tube = m_CurrentStrokeObj.GetComponent<TubeGeometry>();
             Debug.Assert(tube != null);
-            tube.AddSample(m_BrushCursorTransform.position, m_BrushCursorTransform.rotation, brushScale.x, brushScale.y, m_BrushColor);
+            tube.AddSample(m_BrushCursorTransform.position, m_BrushCursorTransform.rotation * Quaternion.Euler(90,0,0), brushScale.x, brushScale.y, m_BrushColor);
 
             m_strokeTransforms.Add(m_CurrentStrokeObj.transform.WorldPointToLocalSpace(m_BrushCursorTransform.position));
 
