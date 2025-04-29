@@ -131,7 +131,9 @@ namespace IVLab.MinVR3
                 GameObject go = new GameObject("Morph " + m_NumStrokes, typeof(Morphing));
                 Morphing morph = go.GetComponent<Morphing>();
                 morph.transform.SetParent(m_ArtworkParentTransform.transform, false);
-                morph.Init(m_CurrentStrokeObj.GetComponent<TubeGeometry>(), nearestSplineSegment, m_ArtworkParentTransform, m_BrushColor, m_BrushCursorTransform.localScale);
+                bool settle = true;
+                if (BrushType.LazyDataBinding == m_brushType) settle = false;
+                morph.Init(m_CurrentStrokeObj.GetComponent<TubeGeometry>(), nearestSplineSegment, m_ArtworkParentTransform, m_BrushColor, m_BrushCursorTransform.localScale, settle);
 
                 for (int i = 0; i < m_strokeSimilarities.Length; i++) {
                     m_strokeSimilarities[i] = 0;
@@ -501,7 +503,19 @@ namespace IVLab.MinVR3
 
         public void SetStrokeType(int brushType)
         {
-            m_brushType = (BrushType)brushType; 
+            m_brushType = (BrushType)brushType;
+            if (m_brushType == BrushType.Both || m_brushType == BrushType.InkDataSettling)
+            {
+                Morphing[] morphs = m_artwork.gameObject.GetComponentsInChildren<Morphing>();
+                foreach (Morphing m in morphs)
+                {
+                    if (!m.m_Settle)
+                    {
+                        m.m_Settle = true;
+                        m.NewMorph();
+                    }
+                }
+            }
         }
 
         public void ResetStrokeType()

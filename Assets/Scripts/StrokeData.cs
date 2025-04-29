@@ -11,6 +11,7 @@ public class StrokeData : MonoBehaviour
     public Dictionary<string, List<float>> m_strokeData = new Dictionary<string, List<float>>();
     private GameObject m_currentStrokeObj;
     private TubeGeometry m_morphStroke;
+    private TubeGeometry m_stationaryStroke;
     private Dictionary<string,float> m_maxValues;
     private Dictionary<string,float> m_minValues;
     private Mesh m_strokeMesh;
@@ -21,6 +22,7 @@ public class StrokeData : MonoBehaviour
     {
         m_currentStrokeObj = strokeObj;
         m_morphStroke = GameObject.Find("Morph " + strokeObj.name).GetComponent<TubeGeometry>();
+        m_stationaryStroke = strokeObj.GetComponent<TubeGeometry>();
         m_strokeMesh = m_morphStroke.GetComponent<MeshRenderer>().GetComponent<MeshFilter>().mesh;
         m_maxValues = maxValues;
         m_minValues = minValues;
@@ -86,6 +88,7 @@ public class StrokeData : MonoBehaviour
         }
 
         List<Vector3> strokeVertices = m_morph.m_endingVertices.ToList();
+        List<Vector3> stationaryStrokeVertices = m_morph.m_stationaryVertices.ToList();
         List<float> featToScaleOn = m_strokeData[feat];
         int numFaces = m_morphStroke.GetNumFaces();
         for (int i = 0; i < strokeVertices.Count(); i+=(numFaces+1))
@@ -106,6 +109,8 @@ public class StrokeData : MonoBehaviour
             // calculate center of tube
             Vector3 center = new Vector3(0,0,0);
             foreach (Vector3 v in m_morphStroke.GetVertices().ToList().GetRange(i, numFaces)) center += (v / numFaces);
+            Vector3 stationaryCenter = new Vector3(0,0,0);
+            foreach (Vector3 v in m_stationaryStroke.GetVertices().ToList().GetRange(i, numFaces)) stationaryCenter += (v / numFaces);
 
             // adjust vertices
             float a = 0;
@@ -113,12 +118,15 @@ public class StrokeData : MonoBehaviour
             for (int j = 0; j < numFaces + 1; j++)
             {
                 Vector3 thisVert = center + m_morphStroke.GetNormals()[i+j] * dataScaleValue * Mathf.Cos(a) + m_morphStroke.GetNormals()[i+j] * dataScaleValue * Mathf.Sin(a);
+                Vector3 thisStationaryVert = stationaryCenter + m_stationaryStroke.GetNormals()[i+j] * dataScaleValue * Mathf.Cos(a) + m_stationaryStroke.GetNormals()[i+j] * dataScaleValue * Mathf.Sin(a);
                 // if (i == 0 && j == 0) Debug.Log(thisVert + " " + dataScaleValue + " " + featToScaleOn[dataIndex] +  " " + m_strokeData["V:0"][dataIndex] + " " + m_strokeData["V:1"][dataIndex] + " " + m_strokeData["V:2"][dataIndex]);
                 strokeVertices[i + j] = thisVert;
+                stationaryStrokeVertices[i + j] = thisStationaryVert;
             }
         }
         // Debug.Log(strokeVertices[0]);
         m_morph.m_endingVertices = strokeVertices.ToArray();
+        m_morph.m_stationaryVertices = stationaryStrokeVertices.ToArray();
     }
 
     // Returns original drawn width; average data value of input feature
@@ -147,6 +155,7 @@ public class StrokeData : MonoBehaviour
     public void SetColors(Color[] colorsPerSample)
     {
         m_morphStroke.SetColorsPerSample(colorsPerSample);
+        m_stationaryStroke.SetColorsPerSample(colorsPerSample);
         m_morph.SetEndingColors(colorsPerSample);
     }
 
