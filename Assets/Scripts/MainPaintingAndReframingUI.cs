@@ -44,7 +44,7 @@ namespace IVLab.MinVR3
             m_NumStrokes = 0;
             SetBrushColor(m_BrushColor);
 
-            m_SplineColoredContainer.transform.SetParent(m_ArtworkParentTransform, false);
+            // m_SplineColoredContainer.transform.SetParent(m_ArtworkParentTransform, false);
         }
 
 
@@ -143,15 +143,15 @@ namespace IVLab.MinVR3
                 }
 
                 // Attach stroke info to tube
-                // GameObject go1 = new GameObject("StrokeData " + m_NumStrokes, typeof(StrokeData));
-                // StrokeData strokedata = go1.GetComponent<StrokeData>();
-                // strokedata.transform.SetParent(tube.transform);
-                // SplineFieldMaker sfm = m_SplineContainer.GetComponent<SplineFieldMaker>();
-                // strokedata.Init(sfm.m_splineFeaturesList[splineIndex], m_CurrentStrokeObj, startKnotIndex, endKnotIndex, sfm.m_maxValues, sfm.m_minValues, morph);
-                // if (m_brushType == BrushType.Both || m_brushType == BrushType.LazyDataBinding)
-                // {
-                //     m_dataMapper.ApplyDataMappingsToStroke(tube, strokedata);
-                // }
+                GameObject go1 = new GameObject("StrokeData " + m_NumStrokes, typeof(StrokeData));
+                StrokeData strokedata = go1.GetComponent<StrokeData>();
+                strokedata.transform.SetParent(tube.transform);
+                SplineFieldMaker sfm = m_SplineContainer.GetComponent<SplineFieldMaker>();
+                strokedata.Init(sfm.m_splineFeaturesList[splineIndex], m_CurrentStrokeObj, startKnotIndex, endKnotIndex, sfm.m_maxValues, sfm.m_minValues, morph);
+                if (m_brushType == BrushType.Both || m_brushType == BrushType.LazyDataBinding)
+                {
+                    m_dataMapper.ApplyDataMappingsToStroke(tube, strokedata);
+                }
 
                 m_NumStrokes++;
             }
@@ -367,8 +367,8 @@ namespace IVLab.MinVR3
                 counter ++;
             }
 
-            m_SplineColoredContainer.AddSpline(newSpline);
-            m_SplineColoredContainer.GetComponent<SplineExtrude>().Rebuild();
+            // m_SplineColoredContainer.AddSpline(newSpline);
+            // m_SplineColoredContainer.GetComponent<SplineExtrude>().Rebuild();
             return newSpline;
         }
 
@@ -620,7 +620,7 @@ namespace IVLab.MinVR3
 
         [SerializeField] SplineContainer m_SplineContainer;
 
-        [SerializeField] SplineContainer m_SplineColoredContainer;
+        // [SerializeField] SplineContainer m_SplineColoredContainer;
 
         private List<Vector3> m_strokeTransforms;
 
