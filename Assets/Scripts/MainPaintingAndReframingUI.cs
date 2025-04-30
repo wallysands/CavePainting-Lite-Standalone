@@ -93,6 +93,7 @@ namespace IVLab.MinVR3
 
             if (m_brushType != BrushType.NoDataBinding)
             {
+                // double startTime = Time.realtimeSinceStartupAsDouble;;
                 List<int> candidateList = m_spatialGrid.GetNearbySplines(m_strokeTransforms);
                 if (candidateList.Count == 0)
                 {
@@ -105,6 +106,8 @@ namespace IVLab.MinVR3
                 {
                     m_strokeSimilarities[i] += pointSimilarities[i]; 
                 }
+                // double endTime = Time.realtimeSinceStartupAsDouble;;
+                // Debug.Log("Similarity check took : " + (endTime - startTime));
             }
         }
 
@@ -140,17 +143,15 @@ namespace IVLab.MinVR3
                 }
 
                 // Attach stroke info to tube
-                GameObject go1 = new GameObject("StrokeData " + m_NumStrokes, typeof(StrokeData));
-                StrokeData strokedata = go1.GetComponent<StrokeData>();
-                strokedata.transform.SetParent(tube.transform);
-                SplineFieldMaker sfm = m_SplineContainer.GetComponent<SplineFieldMaker>();
-                strokedata.Init(sfm.m_splineFeaturesList[splineIndex], m_CurrentStrokeObj, startKnotIndex, endKnotIndex, sfm.m_maxValues, sfm.m_minValues, morph);
-                if (m_brushType == BrushType.Both || m_brushType == BrushType.LazyDataBinding)
-                {
-                    m_dataMapper.ApplyDataMappingsToStroke(tube, strokedata);
-                }
-                // Wait to add this until the morph is complete.
-                //MeshCollider mc = m_CurrentStrokeObj.AddComponent(typeof(MeshCollider)) as MeshCollider;
+                // GameObject go1 = new GameObject("StrokeData " + m_NumStrokes, typeof(StrokeData));
+                // StrokeData strokedata = go1.GetComponent<StrokeData>();
+                // strokedata.transform.SetParent(tube.transform);
+                // SplineFieldMaker sfm = m_SplineContainer.GetComponent<SplineFieldMaker>();
+                // strokedata.Init(sfm.m_splineFeaturesList[splineIndex], m_CurrentStrokeObj, startKnotIndex, endKnotIndex, sfm.m_maxValues, sfm.m_minValues, morph);
+                // if (m_brushType == BrushType.Both || m_brushType == BrushType.LazyDataBinding)
+                // {
+                //     m_dataMapper.ApplyDataMappingsToStroke(tube, strokedata);
+                // }
 
                 m_NumStrokes++;
             }
@@ -388,15 +389,63 @@ namespace IVLab.MinVR3
             {
                 precomputedKnotLengths[i] = spline.GetCurveLength(i);
             }
+            Debug.Log("KNOT COUNT: " + spline.Knots.Count());
 
+            // CALCULATING x BEST SPLINE OPTIONS FOR START AND END
+            int checks = 10;
+            float[] bestStartSim = new float[checks];
+            float[] bestEndSim = new float[checks];
+            int[] startIndices = new int[checks];
+            int[] endIndices = new int[checks];
+            for (int i = 0; i < checks; i ++) 
+            {
+                bestStartSim[i] = float.MaxValue;
+                bestEndSim[i] = float.MaxValue;
+            }
             for (int i = 0; i < spline.Knots.Count(); i++)
+            {
+                BezierKnot startTargetKnot = spline.Knots.ElementAt(i);
+                Vector3 startTargetPos = startTargetKnot.Position;
+                float3 startTargetTan = (startTargetKnot.TangentIn + startTargetKnot.TangentOut) / 2;
+                float startDist = Vector3.Distance(startTargetPos, drawnSpline[0].Position);
+                float startSimilarity = w_dist * Mathf.Pow(startDist, 2) + Mathf.Abs(w_dir * Vector3.Dot(startDrawnTan, startTargetTan));
+                BezierKnot endTargetKnot = spline.Knots.ElementAt(i);
+                Vector3 endTargetPos = endTargetKnot.Position;
+                float3 endTargetTan = (endTargetKnot.TangentIn + endTargetKnot.TangentOut) / 2;
+                float endDist = Vector3.Distance(endTargetPos, drawnSpline[^1].Position);
+                float endSimilarity = w_dist * Mathf.Pow(endDist, 2) + Mathf.Abs(w_dir * Vector3.Dot(endDrawnTan,endTargetTan));
+                // float targetLength = precomputedKnotLengths[Mathf.Min(i, j)..Mathf.Max(i,j)].Sum(); 
+                bool foundBetterStart = false;
+                bool foundBetterEnd = false;
+                for (int j = 0; j < checks; j ++)
+                {
+
+                    if (bestStartSim[j] > startSimilarity && !foundBetterStart)
+                    {
+                        bestStartSim[j] = startSimilarity;
+                        startIndices[j] = i;
+                        foundBetterStart = true;
+                    }
+                    else if (bestEndSim[j] > endSimilarity && !foundBetterEnd)
+                    {
+                        bestEndSim[j] = endSimilarity;
+                        endIndices[j] = i;
+                        foundBetterEnd = true;
+                    }
+                }
+            }
+
+            // CALCULATE PROPER SIMILARITY FOR ALL CANDIDATE POINTS FOR START END
+            // for (int i = 0; i < spline.Knots.Count(); i++)
+            foreach (int i in startIndices)
             {
                 var startTargetKnot = spline.Knots.ElementAt(i);
                 var startTargetPos = startTargetKnot.Position;
                 var startTargetTan = (startTargetKnot.TangentIn + startTargetKnot.TangentOut) / 2;
                 var startDist = Vector3.Distance(startTargetPos, drawnSpline[0].Position);
                 float startSimilarity = w_dist * Mathf.Pow(startDist, 2) + Mathf.Abs(w_dir * Vector3.Dot(startDrawnTan, startTargetTan)); 
-                for (int j = 0; j < spline.Knots.Count(); j++)
+                // for (int j = 0; j < spline.Knots.Count(); j++)
+                foreach (int j in endIndices)
                 {
                     if (i != j)
                     {
